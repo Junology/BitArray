@@ -224,7 +224,16 @@ public:
     //! Flip all the bits
     constexpr BitArray<N,T>& flip() noexcept
     {
-        flip_impl();
+        flip_all_impl();
+        return *this;
+    }
+
+    //! Flip a specific bit
+    constexpr BitArray<N,T>& flip(std::size_t pos) noexcept
+    {
+        std::size_t gpos = pos / chunkbits;
+        std::size_t lpos = pos % chunkbits;
+        m_arr[gpos] ^= (chunkval::one << lpos);
         return *this;
     }
 
@@ -500,7 +509,7 @@ protected:
 
     /** Implementations **/
     template <size_t... is>
-    constexpr void flip_impl() noexcept
+    constexpr void flip_all_impl() noexcept
     {
         for(auto& chunk : m_arr)
             chunk = ~chunk;

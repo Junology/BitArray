@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+# Misc
+compile_commands.json
+*~
+\#*\#
+.\#*
