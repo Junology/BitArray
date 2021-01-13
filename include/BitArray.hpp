@@ -8,10 +8,11 @@
 
 #pragma once
 
-#include "utils.hpp"
-
 #include <algorithm>
 #include <limits>
+#include <ios>
+
+#include "utils.hpp"
 
 namespace BitArray {
 
@@ -21,7 +22,7 @@ namespace BitArray {
  * \tparam N The number of bits
  * \tparam T The type carrying bits.
  */
-template <std::size_t N, class T = uint_fast32_t>
+template <std::size_t N, class T = unsigned long>
 class BitArray {
     static_assert(std::is_unsigned<T>::value, "The type T is not unsigned or integral.");
     static_assert( N > 0, "Zero-sized array is prohibited");
@@ -220,6 +221,13 @@ public:
         set(pos, false);
     }
 
+    //! Flip all the bits
+    constexpr BitArray<N,T>& flip() noexcept
+    {
+        flip_impl();
+        return *this;
+    }
+
     //! Test if a bit in the given position is true.
     constexpr bool test(std::size_t pos) const noexcept
     {
@@ -245,10 +253,8 @@ public:
     //! Test if there is a bit that is set.
     constexpr bool any() const noexcept
     {
-        for(std::size_t i = 0; i < length; ++i) {
-            if(m_arr[i] != chunk_type(0u))
-                return true;
-        }
+        for(auto x : m_arr)
+            if(x) return true;
 
         return false;
     }
@@ -423,11 +429,9 @@ public:
         return *this;
     }
 
-    explicit constexpr operator bool() const noexcept {
-        for(auto x : m_arr)
-            if(x) return true;
-
-        return false;
+    explicit constexpr operator bool() const noexcept
+    {
+        return any();
     }
 
     constexpr bool operator==(BitArray<N,T> const &other) const noexcept
@@ -495,6 +499,14 @@ protected:
     }
 
     /** Implementations **/
+    template <size_t... is>
+    constexpr void flip_impl() noexcept
+    {
+        for(auto& chunk : m_arr)
+            chunk = ~chunk;
+        m_arr[length-1] &= lowmask<endbits>::mask;
+    }
+
     template <size_t n, size_t... is>
     constexpr auto slice_impl(std::index_sequence<is...>, std::size_t i) const noexcept
         -> std::enable_if_t<(n<N),BitArray<n,T>>

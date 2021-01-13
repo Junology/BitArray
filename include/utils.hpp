@@ -95,6 +95,8 @@ constexpr T popcount_impl(T x) noexcept {
         );
 }
 
+} // end namespace _impl
+
 template <class T>
 constexpr T popcount(T x) noexcept
 {
