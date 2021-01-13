@@ -23,7 +23,6 @@ endif(USE_CLANG)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_BUILD_TYPE Debug)
 
 
 ## Export compile_commands.json
@@ -37,8 +36,16 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 ## Tests
 enable_testing()
 
-add_executable(popcount_test "test/popcount_test.cpp")
-add_test(NAME popcount_test COMMAND $<TARGET_FILE:popcount_test>)
+macro(mk_test name)
+  add_executable(${name} "test/${name}.cpp")
+  target_compile_options(${name} PRIVATE
+	${CMAKE_CXX_FLAGS_DEBUG}
+	$<$<CXX_COMPILER_ID:MSVC>: /W4 /WX>
+	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>: -Wall -Wextra>
+	)
+  add_test(NAME ${name} COMMAND $<TARGET_FILE:${name}>)
+endmacro(mk_test)
 
-add_executable(trails_test "test/trails_test.cpp")
-add_test(NAME trails_test COMMAND $<TARGET_FILE:trails_test>)
+mk_test(popcount_test)
+mk_test(trails_test)
+
