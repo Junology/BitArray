@@ -49,3 +49,25 @@ endmacro(mk_test)
 mk_test(popcount_test)
 mk_test(trails_test)
 
+
+## Benchmarks
+add_executable(popcount_bench8 "bench/bitarray_popcnt.cpp")
+target_compile_definitions(popcount_bench8 PRIVATE NBITS=8)
+target_compile_options(popcount_bench8 PRIVATE "SHELL:${CMAKE_CXX_FLAGS_RELEASE}")
+
+add_executable(popcount_bench16 "bench/bitarray_popcnt.cpp")
+target_compile_definitions(popcount_bench16 PRIVATE NBITS=16)
+target_compile_options(popcount_bench16 PRIVATE "SHELL:${CMAKE_CXX_FLAGS_RELEASE}")
+
+add_executable(popcount_bench32 "bench/bitarray_popcnt.cpp")
+target_compile_definitions(popcount_bench32 PRIVATE NBITS=32)
+target_compile_options(popcount_bench32 PRIVATE "SHELL:${CMAKE_CXX_FLAGS_RELEASE}")
+
+add_executable(popcount_bench64 "bench/bitarray_popcnt.cpp")
+target_compile_definitions(popcount_bench64 PRIVATE NBITS=64)
+target_compile_options(popcount_bench64 PRIVATE "SHELL:${CMAKE_CXX_FLAGS_RELEASE}")
+
+add_executable(popcount_benchstd "bench/bitset_popcnt.cpp")
+target_compile_options(popcount_benchstd PRIVATE "SHELL:${CMAKE_CXX_FLAGS_RELEASE}")
+
+

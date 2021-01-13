@@ -47,7 +47,7 @@ public:
         nzero = static_cast<chunk_type>(~zero)
     };
 
-    template <size_t n>
+    template <std::size_t n>
     struct lowmask {
         enum : chunk_type {
             mask = (0 < n)
@@ -55,6 +55,17 @@ public:
                   ? static_cast<chunk_type>(chunkval::nzero >> (chunkbits - n))
                   : chunkval::nzero
                 : 0
+        };
+    };
+
+    template <std::size_t i>
+    struct chunk_traits {
+        enum : chunk_type {
+            mask = (i<length)
+            ? (endbits > 0 && i+1 == length // check if tail bit.
+               ? static_cast<chunk_type>(lowmask<endbits>::mask)
+               : static_cast<chunk_type>(chunkval::nzero))
+            : static_cast<chunk_type>(chunkval::zero)
         };
     };
 
@@ -125,6 +136,11 @@ private:
       : m_arr{arr[is]...}
     {}
 
+    template <std::size_t... is, class larger_t>
+    constexpr BitArray(std::index_sequence<is...>, larger_t x0)
+        : m_arr{static_cast<chunk_type>(x0 >> (std::numeric_limits<chunk_type>::digits*is))...}
+    {}
+
 public:
     /** Constructors **/
     //! Default constructor.
@@ -135,7 +151,19 @@ public:
 
     //! Can be constructed from chunk_type.
     constexpr BitArray(chunk_type x0) noexcept
-      : m_arr{static_cast<chunk_type>(x0 & get_mask(0))}
+        : m_arr{static_cast<chunk_type>(x0 & chunk_traits<0>::mask)}
+    {}
+
+    //! Constructor from unsigned types larger than chunk_type.
+    template <
+        class larger_t,
+        std::enable_if_t<
+            std::is_unsigned<larger_t>::value
+            && (std::numeric_limits<larger_t>::digits > chunkbits),
+        int
+        > = 0>
+    constexpr BitArray(larger_t x0) noexcept
+        : BitArray(std::make_index_sequence<1+(std::numeric_limits<larger_t>::digits-1)/chunkbits>(), x0)
     {}
 
     //! Can be constructed from smaller BitArray with same chunk_type.
@@ -432,7 +460,7 @@ public:
     {
         m_arr[0] = x;
         for(size_t i = 1; i < length; ++i) {
-            m_arr[i] = 0;
+            m_arr[i] = chunkval::zero;
         }
 
         return *this;
@@ -495,12 +523,8 @@ public:
 
 protected:
     /** Some query on chunks **/
-    static constexpr bool inrange(std::size_t i) noexcept {
-        return i<length;
-    }
-
     static constexpr chunk_type get_mask(std::size_t i) noexcept {
-        return inrange(i)
+        return i<length
             ? (endbits > 0 && i+1 == length // check if tail bit.
                ? static_cast<chunk_type>(lowmask<endbits>::mask)
                : static_cast<chunk_type>(chunkval::nzero))
@@ -578,8 +602,8 @@ protected:
         return BitArray<N,T>(
             static_cast<chunk_type>(
                 (is > gpos)
-                ? ((m_arr[is-gpos] << lpos) | (m_arr[is-gpos-1] >> (chunkbits-lpos))) & get_mask(is)
-                : ((is==gpos) ? ((m_arr[0] << lpos) & get_mask(is)) : 0u)
+                ? ((m_arr[is-gpos] << lpos) | (m_arr[is-gpos-1] >> (chunkbits-lpos))) & chunk_traits<is>::mask
+                : ((is==gpos) ? ((m_arr[0] << lpos) & chunk_traits<is>::mask) : 0u)
             )...
         );
     }
