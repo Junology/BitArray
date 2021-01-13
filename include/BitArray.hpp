@@ -148,10 +148,11 @@ public:
     template <
         class... Ts,
         std::enable_if_t<
-            allTrue({
-                    sizeof...(Ts)+2 <= length,
-                    sizeof...(Ts)+2 < length || endbits == 0,
-                    std::is_convertible<Ts,chunk_type>::value...}),
+            conjunction_v<
+                (sizeof...(Ts)+2 <= length),
+                (sizeof...(Ts)+2 < length || endbits == 0),
+                std::is_convertible<Ts,chunk_type>::value...
+                >,
             int
             > = 0
         >
@@ -166,10 +167,11 @@ public:
     template <
         class... Ts,
         std::enable_if_t<
-            allTrue({
-                    sizeof...(Ts)+2 <= length,
-                    sizeof...(Ts)+2 == length && endbits > 0,
-                    std::is_convertible<Ts,chunk_type>::value...}),
+            conjunction_v<
+                (sizeof...(Ts)+2 <= length),
+                (sizeof...(Ts)+2 == length || endbits > 0),
+                std::is_convertible<Ts,chunk_type>::value...
+                >,
             int
             > = 0
         >
