@@ -198,7 +198,7 @@ public:
         std::enable_if_t<
             conjunction_v<
                 (sizeof...(Ts)+2 <= length),
-                (sizeof...(Ts)+2 == length || endbits > 0),
+                (sizeof...(Ts)+2 == length && endbits > 0),
                 std::is_convertible<Ts,chunk_type>::value...
                 >,
             int
@@ -308,8 +308,8 @@ public:
     {
         size_t result = 0;
 
-        for(size_t i = 0; i < length; ++i) {
-            result += static_cast<size_t>(popcount(m_arr[i]));
+        for(auto x : m_arr) {
+            result += static_cast<size_t>(popcount(x));
         }
 
         return result;
@@ -318,8 +318,8 @@ public:
     //! Count trailing ones.
     constexpr size_t countTrail1() const noexcept {
         size_t result = 0;
-        for(size_t i = 0; i < length; ++i) {
-            size_t r = counttrail1(m_arr[i]);
+        for(auto x : m_arr) {
+            size_t r = counttrail1(x);
             result += r;
             if (r < chunkbits)
                 break;

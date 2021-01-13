@@ -51,6 +51,7 @@ mk_test(trails_test)
 
 
 ## Benchmarks
+# pop-count
 add_executable(popcount_bench8 "bench/bitarray_popcnt.cpp")
 target_compile_definitions(popcount_bench8 PRIVATE NBITS=8)
 target_compile_options(popcount_bench8 PRIVATE "SHELL:${CMAKE_CXX_FLAGS_RELEASE}")
@@ -69,5 +70,22 @@ target_compile_options(popcount_bench64 PRIVATE "SHELL:${CMAKE_CXX_FLAGS_RELEASE
 
 add_executable(popcount_benchstd "bench/bitset_popcnt.cpp")
 target_compile_options(popcount_benchstd PRIVATE "SHELL:${CMAKE_CXX_FLAGS_RELEASE}")
+# xorshift
+add_executable(xorshift_bench8 "bench/bitarray_xorshift.cpp")
+target_compile_definitions(xorshift_bench8 PRIVATE NBITS=8)
+target_compile_options(xorshift_bench8 PRIVATE "SHELL:${CMAKE_CXX_FLAGS_RELEASE}")
 
+add_executable(xorshift_bench16 "bench/bitarray_xorshift.cpp")
+target_compile_definitions(xorshift_bench16 PRIVATE NBITS=16)
+target_compile_options(xorshift_bench16 PRIVATE "SHELL:${CMAKE_CXX_FLAGS_RELEASE}")
 
+add_executable(xorshift_bench32 "bench/bitarray_xorshift.cpp")
+target_compile_definitions(xorshift_bench32 PRIVATE NBITS=32)
+target_compile_options(xorshift_bench32 PRIVATE "SHELL:${CMAKE_CXX_FLAGS_RELEASE}")
+
+add_executable(xorshift_bench64 "bench/bitarray_xorshift.cpp")
+target_compile_definitions(xorshift_bench64 PRIVATE NBITS=64)
+target_compile_options(xorshift_bench64 PRIVATE "SHELL:${CMAKE_CXX_FLAGS_RELEASE}")
+
+add_executable(xorshift_benchstd "bench/bitset_xorshift.cpp")
+target_compile_options(xorshift_benchstd PRIVATE "SHELL:${CMAKE_CXX_FLAGS_RELEASE}")
