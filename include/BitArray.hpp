@@ -231,8 +231,14 @@ public:
         return numbits;
     }
 
+    //! Set all bits.
+    constexpr BitArray& set() noexcept {
+        constexpr BitArray result = ~(BitArray{});
+        return (*this) = result;
+    }
+
     //! Set a bit in the given position.
-    constexpr void set(std::size_t pos, bool value = true) noexcept
+    constexpr BitArray& set(std::size_t pos, bool value = true) noexcept
     {
         // If the position is out-of-range, nothing happen.
         if (pos >= numbits)
@@ -244,19 +250,28 @@ public:
             m_arr[gpos] |= (chunkval::one) << lpos;
         else
             m_arr[gpos] &= ~(chunkval::one << lpos);
+
+        return *this;
+    }
+
+    //! Restet all bits
+    constexpr BitArray& reset() noexcept
+    {
+        constexpr BitArray result{};
+        return (*this) = result;
     }
 
     //! Reset a bit in the given position.
-    constexpr void reset(std::size_t pos) noexcept
+    constexpr BitArray& reset(std::size_t pos) noexcept
     {
-        set(pos, false);
+        return set(pos, false);
     }
 
     //! Flip all the bits
     constexpr BitArray<N,chunk_type>& flip() noexcept
     {
-        flip_all_impl();
-        return *this;
+        constexpr BitArray filter = ~(BitArray{});
+        return (*this) ^= filter;
     }
 
     //! Flip a specific bit
@@ -551,13 +566,6 @@ protected:
     }
 
     /** Implementations **/
-    template <size_t... is>
-    constexpr void flip_all_impl() noexcept
-    {
-        for(auto& chunk : m_arr)
-            chunk = ~chunk;
-        m_arr[length-1] &= lowmask<endbits>::mask;
-    }
 
     template <size_t n, size_t... is>
     constexpr auto slice_impl(std::index_sequence<is...>, std::size_t i) const noexcept
