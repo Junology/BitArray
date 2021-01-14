@@ -16,13 +16,16 @@
 
 namespace BitArray {
 
+//! The default type of chunks in BitArray.
+using default_chunk_t = unsigned long long;
+
 /*!
  * Personal re-implementation of std::bitset with constexpr supports even in C++14.
  * It is guaranteed that every bit out of range is 0.
  * \tparam N The number of bits
  * \tparam T The type carrying bits.
  */
-template <std::size_t N, class T = unsigned long>
+template <std::size_t N, class T = default_chunk_t>
 class BitArray {
     static_assert(std::is_unsigned<T>::value, "The type T is not unsigned or integral.");
     static_assert( N > 0, "Zero-sized array is prohibited");
@@ -73,7 +76,7 @@ public:
     //! Dereferencing it gives the (0-begining) index of the bit.
     class PopIterator : public std::forward_iterator_tag
     {
-        friend class BitArray<N,T>;
+        friend class BitArray<N,chunk_type>;
     private:
         chunk_type const *m_chunks;
         size_t m_pos{};
@@ -168,8 +171,8 @@ public:
 
     //! Can be constructed from smaller BitArray with same chunk_type.
     template<size_t M, std::enable_if_t<(M<N), int> = 0>
-    constexpr BitArray(BitArray<M,T> const& src) noexcept
-      : BitArray(std::make_index_sequence<BitArray<M,T>::length>(), src.m_arr)
+    constexpr BitArray(BitArray<M,chunk_type> const& src) noexcept
+      : BitArray(std::make_index_sequence<BitArray<M,chunk_type>::length>(), src.m_arr)
     {}
 
     //! Construct from a sequence of chunk_type's.
@@ -213,10 +216,10 @@ public:
     }
 
     //! Copy constructor is the default one.
-    constexpr BitArray(BitArray<N,T> const&) noexcept = default;
+    constexpr BitArray(BitArray<N,chunk_type> const&) noexcept = default;
 
     //! Move constructor is the default one.
-    constexpr BitArray(BitArray<N,T>&&) noexcept = default;
+    constexpr BitArray(BitArray<N,chunk_type>&&) noexcept = default;
 
     /**************************!
      * \name Basic operations
@@ -250,14 +253,14 @@ public:
     }
 
     //! Flip all the bits
-    constexpr BitArray<N,T>& flip() noexcept
+    constexpr BitArray<N,chunk_type>& flip() noexcept
     {
         flip_all_impl();
         return *this;
     }
 
     //! Flip a specific bit
-    constexpr BitArray<N,T>& flip(std::size_t pos) noexcept
+    constexpr BitArray<N,chunk_type>& flip(std::size_t pos) noexcept
     {
         std::size_t gpos = pos / chunkbits;
         std::size_t lpos = pos % chunkbits;
@@ -349,12 +352,26 @@ public:
         }
         return result;
     }
+    //@}
+
+    /**********************************!
+     * \name Operations on sub-arrays
+     **********************************/
+    //@{
+    //! Get the value of chunks.
+    //! \param i The index of chunks.
+    //! \return The value of the i-th chunk or 0 if i >= BitArray::length.
+    constexpr chunk_type getChunk(std::size_t i) const noexcept
+    {
+        return i < length ? m_arr[i] : (chunkval::zero);
+    }
 
     //! Slicing array; a version for slicing into a larger bit-array.
     //! Hence, it is actually just a cast with right shifts.
+    //! \param i The position of the lowest bit in the slice.
     template <size_t n>
     constexpr auto slice(std::size_t i) const noexcept
-        -> std::enable_if_t<(n>=N),BitArray<n,T>>
+        -> std::enable_if_t<(n>=N),BitArray<n,chunk_type>>
     {
         return BitArray<n>(*this) >> i;
     }
@@ -363,22 +380,22 @@ public:
     //! \param i The position of the lowest bit in the slice.
     template <size_t n>
     constexpr auto slice(std::size_t i) const noexcept
-        -> std::enable_if_t<(n<N),BitArray<n,T>>
+        -> std::enable_if_t<(n<N),BitArray<n,chunk_type>>
     {
         return slice_impl<n>(
-            std::make_index_sequence<BitArray<n,T>::length>(), i);
+            std::make_index_sequence<BitArray<n,chunk_type>::length>(), i);
     }
 
     //! Inactivate lower bits.
     //! \param n The number of bits ignored.
-    constexpr BitArray<N,T> lowcut(std::size_t n) const noexcept
+    constexpr BitArray<N,chunk_type> lowcut(std::size_t n) const noexcept
     {
-        return n >= N ? BitArray<N,T>{} : lowcut_impl(std::make_index_sequence<length>(), n);
+        return n >= N ? BitArray<N,chunk_type>{} : lowcut_impl(std::make_index_sequence<length>(), n);
     }
 
     //! Inactivate higher bits.
     //! \param n The number of bits kept considered.
-    constexpr BitArray<N,T> lowpass(std::size_t n) const noexcept
+    constexpr BitArray<N,chunk_type> lowpass(std::size_t n) const noexcept
     {
         return n >= N ? *this : lowpass_impl(std::make_index_sequence<length>(), n);
     }
@@ -386,7 +403,9 @@ public:
     //! Replace subarray with smaller array
     //! \param i The index of the lowest bit to be replaced.
     template <size_t M, std::enable_if_t<(M<=N),int> = 0 >
-    constexpr void replace(size_t i, BitArray<M,T> const& src, size_t wid = M) noexcept
+    constexpr void replace(
+        size_t i, BitArray<M,chunk_type> const& src, size_t wid = M)
+        noexcept
     {
         // Check if the operation is trivial.
         // Thanks to this, we can assume i < N in what follows.
@@ -396,9 +415,9 @@ public:
         std::size_t gpos = i / chunkbits;
         std::size_t lpos = i % chunkbits;
 
-        BitArray<M+chunkbits,T> src_adj = BitArray<M+chunkbits,T>{src} << lpos;
-        BitArray<M+chunkbits,T> mask
-            = BitArray<M+chunkbits,T>{(~BitArray<M,T>{}).lowpass(wid)} << lpos;
+        BitArray<M+chunkbits,chunk_type> src_adj = BitArray<M+chunkbits,chunk_type>{src} << lpos;
+        BitArray<M+chunkbits,chunk_type> mask
+            = BitArray<M+chunkbits,chunk_type>{BitArray<M,chunk_type>{}.flip().lowpass(wid)} << lpos;
 
         // The number of loops
         // Note that we here assume i < N so that gpos < length.
@@ -432,12 +451,12 @@ public:
      * \name Operator overloads
      ***************************/
     //@{
-    constexpr BitArray<N,T>& operator=(BitArray<N,T> const&) noexcept = default;
-    constexpr BitArray<N,T>& operator=(BitArray<N,T>&&) noexcept = default;
+    constexpr BitArray<N,chunk_type>& operator=(BitArray<N,chunk_type> const&) noexcept = default;
+    constexpr BitArray<N,chunk_type>& operator=(BitArray<N,chunk_type>&&) noexcept = default;
 
     //! Copy from smaller BitArray (with the same chunk_type).
     template<size_t M, std::enable_if_t<(M<N),int> = 0>
-    constexpr BitArray<N,T>& operator=(BitArray<M,T> const &src) noexcept
+    constexpr BitArray<N,chunk_type>& operator=(BitArray<M,chunk_type> const &src) noexcept
     {
         std::fill(
             std::copy(std::begin(src.m_arr),
@@ -456,7 +475,7 @@ public:
             int
             > = 0
         >
-    constexpr BitArray<N,T>& operator=(U x) noexcept
+    constexpr BitArray<N,chunk_type>& operator=(U x) noexcept
     {
         m_arr[0] = x;
         for(size_t i = 1; i < length; ++i) {
@@ -471,7 +490,7 @@ public:
         return any();
     }
 
-    constexpr bool operator==(BitArray<N,T> const &other) const noexcept
+    constexpr bool operator==(BitArray<N,chunk_type> const &other) const noexcept
     {
         for(std::size_t i = 0; i < length; ++i)
             if(m_arr[i] != other.m_arr[i]) return false;
@@ -479,43 +498,43 @@ public:
         return true;
     }
 
-    constexpr bool operator!=(BitArray<N,T> const &other) const noexcept
+    constexpr bool operator!=(BitArray<N,chunk_type> const &other) const noexcept
     {
         return !((*this)==other);
     }
 
-    constexpr BitArray<N,T>& operator&=(BitArray<N,T> const &other) noexcept
+    constexpr BitArray<N,chunk_type>& operator&=(BitArray<N,chunk_type> const &other) noexcept
     {
         for(size_t i = 0; i < length; ++i)
             m_arr[i] &= other.m_arr[i];
         return *this;
     }
 
-    constexpr BitArray<N,T>& operator|=(BitArray<N,T> const &other) noexcept
+    constexpr BitArray<N,chunk_type>& operator|=(BitArray<N,chunk_type> const &other) noexcept
     {
         for(size_t i = 0; i < length; ++i)
             m_arr[i] |= other.m_arr[i];
         return *this;
     }
 
-    constexpr BitArray<N,T>& operator^=(BitArray<N,T> const &other) noexcept
+    constexpr BitArray<N,chunk_type>& operator^=(BitArray<N,chunk_type> const &other) noexcept
     {
         for(size_t i = 0; i < length; ++i)
             m_arr[i] ^= other.m_arr[i];
         return *this;
     }
 
-    constexpr BitArray<N,T> operator~() const noexcept
+    constexpr BitArray<N,chunk_type> operator~() const noexcept
     {
         return not_impl(std::make_index_sequence<length>());
     }
 
-    constexpr BitArray<N,T> operator<<(std::size_t n) const noexcept
+    constexpr BitArray<N,chunk_type> operator<<(std::size_t n) const noexcept
     {
         return lshift_impl(std::make_index_sequence<length>(), n);
     }
 
-    constexpr BitArray<N,T> operator>>(std::size_t n) const noexcept
+    constexpr BitArray<N,chunk_type> operator>>(std::size_t n) const noexcept
     {
         return rshift_impl(std::make_index_sequence<length>(), n);
     }
@@ -542,12 +561,12 @@ protected:
 
     template <size_t n, size_t... is>
     constexpr auto slice_impl(std::index_sequence<is...>, std::size_t i) const noexcept
-        -> std::enable_if_t<(n<N),BitArray<n,T>>
+        -> std::enable_if_t<(n<N),BitArray<n,chunk_type>>
     {
         std::size_t gpos = i / chunkbits;
         std::size_t lpos = i % chunkbits;
 
-        return BitArray<n,T>{static_cast<chunk_type>(
+        return BitArray<n,chunk_type>{static_cast<chunk_type>(
                 gpos+is >= length
                 ? 0u
                 : ((m_arr[gpos+is] >> lpos) | (gpos+is+1>=length ? 0u : (m_arr[gpos+is+1] << (chunkbits-lpos))))
@@ -555,13 +574,13 @@ protected:
     }
 
     template <std::size_t... is>
-    constexpr BitArray<N,T> lowcut_impl(std::index_sequence<is...>, std::size_t n) const noexcept
+    constexpr BitArray<N,chunk_type> lowcut_impl(std::index_sequence<is...>, std::size_t n) const noexcept
     {
         std::size_t gpos = n / chunkbits;
         std::size_t lpos = n % chunkbits;
         chunk_type mask{static_cast<chunk_type>(chunkval::nzero << lpos)};
 
-        return BitArray<N,T>(
+        return BitArray<N,chunk_type>(
             static_cast<chunk_type>(
                 is > gpos ? m_arr[is]
                 : (is == gpos ? m_arr[is] & mask : 0u)
@@ -570,7 +589,7 @@ protected:
     }
 
     template <std::size_t... is>
-    constexpr BitArray<N,T> lowpass_impl(std::index_sequence<is...>, std::size_t n) const noexcept
+    constexpr BitArray<N,chunk_type> lowpass_impl(std::index_sequence<is...>, std::size_t n) const noexcept
     {
         std::size_t gpos = n / chunkbits;
         std::size_t lpos = n % chunkbits;
@@ -580,7 +599,7 @@ protected:
         chunk_type mask{lpos > 0u ? static_cast<chunk_type>(chunkval::nzero >> (chunkbits - lpos)) : chunkval::zero};
 #pragma GCC diagnostic pop
 
-        return BitArray<N,T>(
+        return BitArray<N,chunk_type>(
             static_cast<chunk_type>(
                 is < gpos ? m_arr[is]
                 : (is == gpos ? m_arr[is] & mask : 0)
@@ -589,17 +608,17 @@ protected:
     }
 
     template <std::size_t... is>
-    constexpr BitArray<N,T> not_impl(std::index_sequence<is...>) const noexcept
+    constexpr BitArray<N,chunk_type> not_impl(std::index_sequence<is...>) const noexcept
     {
-        return BitArray<N,T>(static_cast<chunk_type>(~m_arr[is])...);
+        return BitArray<N,chunk_type>(static_cast<chunk_type>(~m_arr[is])...);
     }
 
     template<std::size_t... is>
-    constexpr BitArray<N,T> lshift_impl(std::index_sequence<is...>, std::size_t n) const noexcept
+    constexpr BitArray<N,chunk_type> lshift_impl(std::index_sequence<is...>, std::size_t n) const noexcept
     {
         std::size_t gpos = n / chunkbits;
         std::size_t lpos = n % chunkbits;
-        return BitArray<N,T>(
+        return BitArray<N,chunk_type>(
             static_cast<chunk_type>(
                 (is > gpos)
                 ? ((m_arr[is-gpos] << lpos) | (m_arr[is-gpos-1] >> (chunkbits-lpos))) & chunk_traits<is>::mask
@@ -609,11 +628,11 @@ protected:
     }
 
     template<std::size_t... is>
-    constexpr BitArray<N,T> rshift_impl(std::index_sequence<is...>, std::size_t n) const noexcept
+    constexpr BitArray<N,chunk_type> rshift_impl(std::index_sequence<is...>, std::size_t n) const noexcept
     {
         std::size_t gpos = n / chunkbits;
         std::size_t lpos = n % chunkbits;
-        return BitArray<N,T>(
+        return BitArray<N,chunk_type>(
             static_cast<chunk_type>(
                 is+gpos < length-1
                 ? (m_arr[is+gpos] >> lpos | m_arr[is+gpos+1] << (chunkbits-lpos))
