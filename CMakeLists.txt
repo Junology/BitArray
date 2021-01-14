@@ -36,9 +36,8 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 ## Tests
 enable_testing()
 
-macro(mk_test name src defs)
+macro(mk_test name src)
   add_executable(${name} ${src})
-  target_compile_definitions(${name} PRIVATE "SHELL:${defs}")
   target_compile_options(${name} PRIVATE
 	${CMAKE_CXX_FLAGS_DEBUG}
 	$<$<CXX_COMPILER_ID:MSVC>: /W4 /WX>
@@ -47,8 +46,9 @@ macro(mk_test name src defs)
   add_test(NAME ${name} COMMAND $<TARGET_FILE:${name}>)
 endmacro(mk_test)
 
-mk_test(popcount_test "test/popcount_test.cpp" "")
-mk_test(trails_test "test/trails_test.cpp" "")
+mk_test(popcount_test "test/popcount_test.cpp")
+mk_test(trails_test "test/trails_test.cpp")
+mk_test(convert_test "test/convert_test.cpp")
 
 
 ## Benchmarks

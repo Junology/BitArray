@@ -3,6 +3,10 @@
 
 #include "BitArray.hpp"
 
+#ifndef NBITS
+#define NBITS 32
+#endif
+
 #define CHUNK_TYPE_AUX(x) uint ## x ## _t
 #define CHUNK_TYPE_AUX2(x) CHUNK_TYPE_AUX(x)
 #define CHUNK_TYPE CHUNK_TYPE_AUX2(NBITS)

@@ -20,25 +20,28 @@ namespace from {
 
 //! \function bitset Conversion from std::bitset.
 namespace _impl {
-template <std::size_t N, std::size_t... is>
-BitArray<N>
+template <class T, std::size_t N, std::size_t... is>
+BitArray<N,T>
 bitset_impl(std::index_sequence<is...>, std::bitset<N> const& src) noexcept
 {
-    constexpr std::bitset<N> ullmask{~0x0ull};
-    return BitArray<N>(
-        static_cast<typename BitArray<N>::chunk_type>(
-            ((src >> (BitArray<N>::chunk_bits*is)) & ullmask).to_ullong()
+    using target_t = BitArray<N,T>;
+    constexpr std::bitset<N> ullmask{~0ull};
+    return target_t(
+        static_cast<T>(
+            ((src >> (target_t::chunkbits*is)) & ullmask).to_ullong()
             )
         ...
         );
 }
 
 } // end namespace _impl
-template <std::size_t N>
-BitArray<N>
+template <class T = default_chunk_t, std::size_t N>
+BitArray<N,T>
 bitset(std::bitset<N> const& src) noexcept
 {
-    return bitset_impl(std::make_index_sequence<BitArray<N>::length>(), src);
+    using target_t = BitArray<N,T>;
+    return _impl::bitset_impl<T>(
+        std::make_index_sequence<target_t::length>(), src);
 }
 
 } // end namespace BitArray::from
@@ -49,7 +52,7 @@ namespace to {
 //! \function bitset Conversion to std::bitset.
 template <std::size_t N, class T>
 std::bitset<N>
-bitset_impl(BitArray<N,T> const& src) noexcept
+bitset(BitArray<N,T> const& src) noexcept
 {
     std::bitset<N> result{};
     for(std::size_t i = 0; i < BitArray<N,T>::length; ++i) {
