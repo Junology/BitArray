@@ -49,6 +49,7 @@ endmacro(mk_test)
 mk_test(popcount_test "test/popcount_test.cpp")
 mk_test(trails_test "test/trails_test.cpp")
 mk_test(convert_test "test/convert_test.cpp")
+mk_test(bitop_test "test/bitop_test.cpp")
 
 
 ## Benchmarks
