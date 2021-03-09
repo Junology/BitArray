@@ -553,6 +553,19 @@ public:
     {
         return rshift_impl(std::make_index_sequence<length>(), n);
     }
+
+    //! Prefix increment operator
+    constexpr BitArray<N,chunk_type>& operator++() noexcept {
+        return increment_impl<0u>();
+    }
+
+    //! Postfix increment operator
+    constexpr BitArray<N,chunk_type>& operator++(int) noexcept {
+        auto aux = *this;
+        ++(*this);
+        return aux;
+    }
+
     //@}
 
 protected:
@@ -647,6 +660,26 @@ protected:
                 : ((is+gpos == length-1) ? (m_arr[length-1] >> lpos) : chunkval::zero )
             )...
         );
+    }
+
+    //! Implementation of the (prefix) increment operator.
+    template <std::size_t i>
+    inline constexpr BitArray<N,chunk_type>& increment_impl() noexcept
+    {
+        if (m_arr[i] == std::numeric_limits<chunk_type>::max) {
+            m_arr[i] = static_cast<chunk_type>(0u);
+            return increment_impl<i+1>();
+        }
+        else {
+            ++(m_arr[i]);
+
+            //! Round bits of the highest chunk.
+            if constexpr(i+1==length) {
+                m_arr[i] &= chunk_traits<i>::mask;
+            }
+
+            return *this;
+        }
     }
 };
 
