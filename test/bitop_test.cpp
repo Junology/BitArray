@@ -1,4 +1,5 @@
 #include <iostream>
+#include <thread>
 
 #include "BitArray.hpp"
 #include "transforms.hpp"
@@ -97,6 +98,45 @@ bool test_not() noexcept
     return true;
 }
 
+template <class T>
+bool test_increment() noexcept
+{
+    constexpr unsigned long addee_num = 10000u;
+    BitArray::BitArray<num_bits> bset{123456789ull};
+    BitArray::BitArray<num_bits> addee{addee_num};
+
+    for(std::size_t i = 0; i < num_loop; ++i) {
+        BitArray::BitArray<num_bits> add_result = bset;
+
+        // Adder
+        std::thread adder(
+            [&addee,&add_result]{
+                auto conti = addee;
+                while(conti) {
+                    auto conti_next = add_result & conti;
+                    add_result ^= conti;
+                    conti = (conti_next << 1u);
+                }
+            });
+
+        // Million times increments
+        for(std::size_t j = 0; j < addee_num; ++j) {
+            ++bset;
+        }
+
+        adder.join();
+
+        if (bset != add_result) {
+            std::cerr << i << ":" << std::endl;
+            std::cerr << bset << std::endl;
+            std::cerr << add_result << std::endl;
+            return false;
+        }
+    }
+
+    return true;
+}
+
 int main(int, char**)
 {
     std::cout << "\e[34;1m---\nTest quasi_xorshift()\n---\e[m" << std::endl;
@@ -153,6 +193,20 @@ int main(int, char**)
         return EXIT_FAILURE;
     std::cout << "64bit chunks:" << std::endl;
     if (!test_not<std::uint64_t>())
+        return EXIT_FAILURE;
+
+    std::cout << "\e[34;1m---\nTest 'increment' operation\n---\e[m" << std::endl;
+    std::cout << "8bit chunks:" << std::endl;
+    if (!test_increment<std::uint8_t>())
+        return EXIT_FAILURE;
+    std::cout << "16bit chunks:" << std::endl;
+    if (!test_increment<std::uint16_t>())
+        return EXIT_FAILURE;
+    std::cout << "32bit chunks:" << std::endl;
+    if (!test_increment<std::uint32_t>())
+        return EXIT_FAILURE;
+    std::cout << "64bit chunks:" << std::endl;
+    if (!test_increment<std::uint64_t>())
         return EXIT_FAILURE;
 
     return EXIT_SUCCESS;

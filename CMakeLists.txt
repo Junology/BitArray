@@ -24,6 +24,8 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+find_package(Threads REQUIRED)
+
 
 ## Export compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -36,20 +38,24 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 ## Tests
 enable_testing()
 
-macro(mk_test name src)
+macro(mk_test name src is_threaded)
   add_executable(${name} ${src})
   target_compile_options(${name} PRIVATE
 	${CMAKE_CXX_FLAGS_DEBUG}
 	$<$<CXX_COMPILER_ID:MSVC>: /W4 /WX>
 	$<$<NOT:$<CXX_COMPILER_ID:MSVC>>: -Wall -Wextra>
 	)
+  if (${is_threaded})
+	message("Building with Threads")
+    target_link_libraries(${name} Threads::Threads)
+  endif (${is_threaded})
   add_test(NAME ${name} COMMAND $<TARGET_FILE:${name}>)
 endmacro(mk_test)
 
-mk_test(popcount_test "test/popcount_test.cpp")
-mk_test(trails_test "test/trails_test.cpp")
-mk_test(convert_test "test/convert_test.cpp")
-mk_test(bitop_test "test/bitop_test.cpp")
+mk_test(popcount_test "test/popcount_test.cpp" OFF)
+mk_test(trails_test "test/trails_test.cpp" OFF)
+mk_test(convert_test "test/convert_test.cpp" OFF)
+mk_test(bitop_test "test/bitop_test.cpp" ON)
 
 
 ## Benchmarks

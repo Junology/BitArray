@@ -41,6 +41,7 @@ public:
         numbits = N,
         chunkbits = std::numeric_limits<chunk_type>::digits,
         length = (N + chunkbits - 1) / chunkbits,
+        max_index = length-1,
         endbits = N % chunkbits
     };
 
@@ -53,11 +54,11 @@ public:
     template <std::size_t n>
     struct lowmask {
         enum : chunk_type {
-            mask = (0 < n)
-                ? (n < chunkbits)
+            mask = (0u < n)
+                ? (n < static_cast<std::size_t>(chunkbits))
                   ? static_cast<chunk_type>(chunkval::nzero >> (chunkbits - n))
-                  : chunkval::nzero
-                : 0
+                : static_cast<chunk_type>(chunkval::nzero)
+                : 0u
         };
     };
 
@@ -321,7 +322,7 @@ public:
     }
 
     //! Population-count (aka. Hamming weight).
-    //! The result may be incorrect when N > std::numeric_limits<std::size_t>::max.
+    //! The result may be incorrect when N > std::numeric_limits<std::size_t>::max().
     constexpr size_t count() const noexcept
     {
         size_t result = 0;
@@ -378,7 +379,7 @@ public:
     //! \return The value of the i-th chunk or 0 if i >= BitArray::length.
     constexpr chunk_type getChunk(std::size_t i) const noexcept
     {
-        return i < length ? m_arr[i] : (chunkval::zero);
+        return i < length ? m_arr[i] : static_cast<chunk_type>(chunkval::zero);
     }
 
     //! Slicing array; a version for slicing into a larger bit-array.
@@ -556,11 +557,11 @@ public:
 
     //! Prefix increment operator
     constexpr BitArray<N,chunk_type>& operator++() noexcept {
-        return increment_impl<0u>();
+        return increment_impl(std::integral_constant<std::size_t,0>());
     }
 
     //! Postfix increment operator
-    constexpr BitArray<N,chunk_type>& operator++(int) noexcept {
+    constexpr BitArray<N,chunk_type> operator++(int) noexcept {
         auto aux = *this;
         ++(*this);
         return aux;
@@ -663,23 +664,32 @@ protected:
     }
 
     //! Implementation of the (prefix) increment operator.
-    template <std::size_t i>
-    inline constexpr BitArray<N,chunk_type>& increment_impl() noexcept
+    template <
+        std::size_t i,
+        std::enable_if_t<(i<max_index), int> = 0>
+    inline constexpr BitArray<N,chunk_type>& increment_impl(std::integral_constant<std::size_t, i>) noexcept
     {
-        if (m_arr[i] == std::numeric_limits<chunk_type>::max) {
+        if (m_arr[i] == std::numeric_limits<chunk_type>::max()) {
             m_arr[i] = static_cast<chunk_type>(0u);
-            return increment_impl<i+1>();
+
+            return increment_impl(std::integral_constant<std::size_t,i+1>());
         }
         else {
             ++(m_arr[i]);
-
-            //! Round bits of the highest chunk.
-            if constexpr(i+1==length) {
-                m_arr[i] &= chunk_traits<i>::mask;
-            }
-
             return *this;
         }
+    }
+
+    inline constexpr BitArray<N,chunk_type>& increment_impl(std::integral_constant<std::size_t, max_index>) noexcept
+    {
+        if (m_arr[max_index] == std::numeric_limits<chunk_type>::max()) {
+            m_arr[max_index] = static_cast<chunk_type>(0u);
+        }
+        else {
+            ++(m_arr[max_index]);
+            m_arr[max_index] &= chunk_traits<length>::mask;
+        }
+        return *this;
     }
 };
 
