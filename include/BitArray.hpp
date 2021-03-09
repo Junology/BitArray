@@ -242,7 +242,7 @@ public:
     {
         // If the position is out-of-range, nothing happen.
         if (pos >= numbits)
-            return;
+            return *this;
 
         std::size_t gpos = pos / chunkbits;
         std::size_t lpos = pos % chunkbits;
