@@ -12,8 +12,7 @@
 #include <limits>
 #include <ios>
 
-#include "utils.hpp"
-#include "iterators.hpp"
+#include "BitArray/utils.hpp"
 
 namespace BitArray {
 
@@ -34,6 +33,9 @@ class BitArray {
     //! Have access to BitArray of different lengths.
     template<std::size_t M, class U>
     friend class BitArray;
+
+    template<template<std::size_t,class> class, std::size_t, class>
+    friend class BitContainer;
 
 public:
     using chunk_type = T;
@@ -392,7 +394,7 @@ public:
 
     /********************!
      * \name Iterators
-     ********************/
+     ********************
     //@{
     //! Return the begining of iterators visiting true bits.
     constexpr PopIterator<BitArray> popBegin() const noexcept {
@@ -404,6 +406,7 @@ public:
         return PopIterator<BitArray>(m_arr, length-1, 0);
     }
     //@}
+    // **/
 
 
     /***************************!
@@ -634,8 +637,10 @@ protected:
         }
         return *this;
     }
-};
+}; // End of BitArray class definition.
 
+//!\group Non-member operator overloads
+//!\{
 template<size_t N, class T>
 constexpr BitArray<N,T> operator&(BitArray<N,T> lhs, BitArray<N,T> const& rhs) noexcept
 {
@@ -665,6 +670,8 @@ std::ostream& operator<<(std::basic_ostream<C>& out, BitArray<N,T> const& bit)
 
     return out;
 }
+//!\}
+
 
 } // end namespace BitArray
 

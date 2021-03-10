@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "BitArray.hpp"
-#include "transforms.hpp"
+#include "BitArray/transforms.hpp"
 
 constexpr std::size_t num_bits = 317;
 

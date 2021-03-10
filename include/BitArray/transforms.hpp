@@ -11,7 +11,7 @@
 #include <bitset>
 #include <string>
 
-#include "BitArray.hpp"
+#include "../BitArray.hpp"
 
 namespace BitArray {
 

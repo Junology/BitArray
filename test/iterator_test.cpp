@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "BitArray.hpp"
-#include "iterators.hpp"
+#include "BitArray/iterators.hpp"
 
 constexpr std::size_t num_bits = 317;
 
@@ -24,7 +24,8 @@ bool popiterator_test() {
     constexpr BitArray::BitArray<num_bits, T> bitarr = mkFizzBuzzBits<T>();
     auto tester = bitarr;
 
-    for(auto itr = bitarr.popBegin(); itr != bitarr.popEnd(); ++itr) {
+    auto rng = BitArray::range<BitArray::PopIterator>(bitarr);
+    for(auto itr = rng.begin(); itr != rng.end(); ++itr) {
         if (!bitarr.test(*itr))
             return false;
         tester.reset(*itr);

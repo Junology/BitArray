@@ -8,7 +8,7 @@
 
 #include <iostream>
 
-#include "utils.hpp"
+#include "BitArray/utils.hpp"
 
 template <class T>
 T naive_popcnt(T x) noexcept
