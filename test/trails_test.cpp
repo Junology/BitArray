@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <limits>
+#include <tuple>
 
 #include "detail/utils.hpp"
 
@@ -67,6 +68,22 @@ bool test1() {
 
 int main(int, char**)
 {
+    std::cout << "\e[34;1m---\nmake_from_tuple\n---\e[m" << std::endl;
+    auto tup0 = std::make_tuple(1,3.14,'c');
+    auto tup = BitArray::make_from_tuple<std::tuple<int,double,char>>(tup0);
+    if(std::get<0>(tup) != std::get<0>(tup0)) {
+        std::cerr << "The first component of tup: " << std::get<0>(tup) << std::endl;
+        std::cerr << "Should be: " << std::get<0>(tup0) << std::endl;
+    }
+    if(std::get<1>(tup) != std::get<1>(tup0)) {
+        std::cerr << "The first component of tup: " << std::get<1>(tup) << std::endl;
+        std::cerr << "Should be: " << std::get<1>(tup0) << std::endl;
+    }
+    if(std::get<2>(tup) != std::get<2>(tup0)) {
+        std::cerr << "The first component of tup: " << std::get<2>(tup) << std::endl;
+        std::cerr << "Should be: " << std::get<2>(tup0) << std::endl;
+    }
+
     std::cout << "\e[34;1m---\nTest for 8 bits\n---\e[m" << std::endl;
     std::cout << "Count of trailing 0:" << std::endl;
     if(!test0<uint8_t,0xFFu>()) {

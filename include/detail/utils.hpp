@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <utility>
 #include <type_traits>
 #include <limits>
 
@@ -34,6 +35,26 @@ struct conjunction<false, conds...> : public std::false_type {};
 template <bool... conds>
 constexpr bool conjunction_v = conjunction<conds...>::value;
 
+//! \function make_from_tuple
+//! Counterpart of std::make_from_tuple in C++17.
+namespace _impl {
+template <class T, class Tuple, std::size_t... Is>
+constexpr T make_from_tuple_impl(Tuple && tup, std::index_sequence<Is...>)
+{
+    return T(std::get<Is>(tup)...);
+}
+}
+
+template <class T, class Tuple>
+constexpr T make_from_tuple(Tuple&& tup)
+{
+    return _impl::make_from_tuple_impl<T>(
+        std::forward<Tuple>(tup),
+        std::make_index_sequence<
+            std::tuple_size<std::remove_reference_t<Tuple>>::value
+        >()
+        );
+}
 
 //! The function that produce the following values:
 //! > bitwave(1) == 0b...01010101;
