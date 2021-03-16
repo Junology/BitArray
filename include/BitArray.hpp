@@ -1,7 +1,7 @@
 /*!
  * \file BitArray.hpp
  * \author Jun Yoshida
- * \copyright (c) 2019-2020 Jun Yoshida.
+ * \copyright (c) 2019-2021 Jun Yoshida.
  * The project is released under the MIT License.
  * \date January, 5 2020: created
  */
@@ -12,7 +12,7 @@
 #include <limits>
 #include <ios>
 
-#include "BitArray/utils.hpp"
+#include "detail/utils.hpp"
 
 namespace BitArray {
 
@@ -172,7 +172,7 @@ public:
      **************************/
     //@{
     //! Get the number of bits.
-    constexpr std::size_t size() noexcept
+    constexpr std::size_t size() const noexcept
     {
         return numbits;
     }

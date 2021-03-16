@@ -7,8 +7,9 @@
  */
 
 #include <iostream>
+#include <limits>
 
-#include "BitArray/utils.hpp"
+#include "detail/utils.hpp"
 
 template <class T>
 T naive_trail0(T x) noexcept
