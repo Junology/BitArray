@@ -313,6 +313,20 @@ public:
         }
         return result;
     }
+
+    //! Get the states of the bits as an array of characters.
+    constexpr std::array<char,numbits>
+    digits(char c0 = '0', char c1 = '1')
+        const noexcept
+    {
+        return digits_impl(c0, c1, std::make_index_sequence<numbits>());
+    }
+
+    std::string to_string() const noexcept
+    {
+        auto digs = digits();
+        return std::string(digs.data(), digs.size());
+    }
     //@}
 
     /**********************************!
@@ -526,6 +540,32 @@ protected:
     }
 
     /** Implementations **/
+
+    template <std::size_t... is>
+    constexpr std::array<char,numbits>
+    digits_impl(char c0, char c1, std::index_sequence<is...>)
+        const noexcept
+    {
+        char str[numbits]{};
+
+        // Digits in the last chunk
+        {
+            auto const last_digits = bindigits(m_arr[length-1],c0,c1);
+            for(std::size_t j = 0; j < endbits; ++j) {
+                str[j] = last_digits[(chunkbits-endbits) + j];
+            }
+        }
+
+        // Digits in the other chunks
+        for(std::size_t i = 0; i+1 < length; ++i) {
+            auto const chunk_digits = bindigits(m_arr[length - i - 2],c0,c1);
+            for(std::size_t j = 0; j < chunkbits; ++j) {
+                str[endbits + chunkbits*i + j] = chunk_digits[j];
+            }
+        }
+
+        return {str[is]...};
+    }
 
     template <size_t n, size_t... is>
     constexpr auto slice_impl(std::index_sequence<is...>, std::size_t i) const noexcept

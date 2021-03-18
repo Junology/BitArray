@@ -48,6 +48,39 @@ bool test_bindigits() noexcept
 }
 
 template <class T>
+bool test_bitarr_digits() noexcept
+{
+    constexpr BitArray::BitArray<num_bits,T> barr0{123456789ull};
+    constexpr auto barr0_dig = barr0.digits();
+    std::string str(barr0_dig.data(), barr0_dig.size());
+    std::bitset<num_bits> bset{123456789ull};
+
+    if(bset.to_string() != str) {
+        std::cerr << "Wrong binary representation:" << std::endl;
+        std::cerr << str << std::endl;
+        std::cerr << bset << std::endl;
+        return false;
+    }
+
+    auto barr = barr0;
+    for(std::size_t i = 0; i < 0x1000; ++i) {
+        barr = quasi_xorshift(barr);
+        bset = quasi_xorshift(bset);
+        auto barr_dig = barr.digits();
+        str.assign(barr_dig.data(), barr_dig.size());
+
+        if(bset.to_string() != str) {
+            std::cerr << "Wrong binary representation:" << std::endl;
+            std::cerr << str << std::endl;
+            std::cerr << bset << std::endl;
+            return false;
+        }
+    }
+
+    return true;
+}
+
+template <class T>
 bool test_from_bitset() noexcept
 {
     std::bitset<num_bits> bset{123456789ull};
@@ -91,7 +124,7 @@ bool test_to_bitset() noexcept
 
 int main(int, char**)
 {
-    std::cout << "\e[34;1m---\nTest binary digit representations\n---\e[m" << std::endl;
+    std::cout << "\e[34;1m---\nTest binary digit representations for integrals\n---\e[m" << std::endl;
     std::cout << "8bit binary representations:" << std::endl;
     if(!test_bindigits<std::uint8_t>())
         return EXIT_FAILURE;
@@ -103,6 +136,21 @@ int main(int, char**)
         return EXIT_FAILURE;
     std::cout << "64bit binary representations:" << std::endl;
     if(!test_bindigits<std::uint64_t>())
+        return EXIT_FAILURE;
+    std::cout << "Passed." << std::endl;
+
+    std::cout << "\e[34;1m---\nTest binary digit representations for BitArray\n---\e[m" << std::endl;
+    std::cout << "8bit chunks:" << std::endl;
+    if(!test_bitarr_digits<std::uint8_t>())
+        return EXIT_FAILURE;
+    std::cout << "16bit chunks:" << std::endl;
+    if(!test_bitarr_digits<std::uint16_t>())
+        return EXIT_FAILURE;
+    std::cout << "32bit chunks:" << std::endl;
+    if(!test_bitarr_digits<std::uint32_t>())
+        return EXIT_FAILURE;
+    std::cout << "64bit chunks:" << std::endl;
+    if(!test_bitarr_digits<std::uint64_t>())
         return EXIT_FAILURE;
     std::cout << "Passed." << std::endl;
 
