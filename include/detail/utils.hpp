@@ -11,6 +11,7 @@
 #include <utility>
 #include <type_traits>
 #include <limits>
+#include <array>
 
 namespace BitArray {
 
@@ -55,6 +56,7 @@ constexpr T make_from_tuple(Tuple&& tup)
         >()
         );
 }
+
 
 //! The function that produce the following values:
 //! > bitwave(1) == 0b...01010101;
@@ -155,6 +157,61 @@ constexpr T counttrail0(T x) noexcept
                   "std::is_unsigned<T>::value == false");
 
     return popcount<T>(~x & (x-1));
+}
+
+//! \function bindigits
+//! Convert an (unsigned) integral value into a binary representation string.
+//! \tparam IsRev If IsRev::value == true, then the resulting representation is aligned from lower-bits to higher-bits.
+//! \param x The value to be converted into an array of characters.
+//! \param c0 The character that represents the 'true' bits.
+//! \param c1 The character that represents the 'false' bits.
+namespace _impl {
+
+template <std::size_t, class T>
+constexpr T const_get(T x) noexcept { return x; }
+
+template <class T, std::size_t...Is>
+constexpr std::array<char,std::numeric_limits<T>::digits>
+bindigits_impl(
+    T x, char c0, char c1,
+    std::index_sequence<Is...>,
+    std::integral_constant<bool,false>
+    ) noexcept
+{
+    char str[] = {const_get<Is>(c0)...};
+    while(x) {
+        str[std::numeric_limits<T>::digits - counttrail0(x) - 1] = c1;
+        x &= (x-1);
+    }
+    return {str[Is]...};
+}
+
+template <class T, std::size_t...Is>
+constexpr std::array<char,std::numeric_limits<T>::digits>
+bindigits_impl(
+    T x, char c0, char c1,
+    std::index_sequence<Is...>,
+    std::integral_constant<bool,true>
+    ) noexcept
+{
+    char str[] = {const_get<Is>(c0)...};
+    while(x) {
+        str[counttrail0(x)] = c1;
+        x &= (x-1);
+    }
+    return {str[Is]...};
+}
+}
+
+template <class T, class IsRev = std::false_type>
+constexpr std::array<char,std::numeric_limits<T>::digits>
+bindigits(T x, char c0 = '0', char c1 = '1', IsRev = IsRev{}) noexcept
+{
+    return _impl::bindigits_impl(
+        x, c0, c1,
+        std::make_index_sequence<std::numeric_limits<T>::digits>(),
+        std::integral_constant<bool,IsRev::value>()
+        );
 }
 
 

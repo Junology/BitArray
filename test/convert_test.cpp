@@ -14,6 +14,40 @@ T quasi_xorshift(T x) {
 }
 
 template <class T>
+bool test_bindigits() noexcept
+{
+    using bset_t = std::bitset<std::numeric_limits<T>::digits>;
+
+    constexpr T x0 = static_cast<T>(123456789ull);
+
+    // bindigits() can be computed in compile-time.
+    constexpr auto x0_bin = BitArray::bindigits(x0);
+    std::string str0(x0_bin.data(), x0_bin.size());
+
+    if(bset_t(x0).to_string() != str0) {
+        std::cerr << "Wrong binary representation:" << std::endl;
+        std::cerr << str0 << std::endl;
+        std::cerr << bset_t(x0) << std::endl;
+        return false;
+    }
+
+    auto x = x0;
+    for(std::size_t i = 0; i < 0x10000; ++i) {
+        x = quasi_xorshift(x);
+        auto x_bin = BitArray::bindigits(x,'0','1');
+        std::string str(x_bin.data(), x_bin.size());
+        if(bset_t(x).to_string() != str) {
+            std::cerr << "Wrong binary representation:" << std::endl;
+            std::cerr << str << std::endl;
+            std::cerr << bset_t(x) << std::endl;
+            return false;
+        }
+    }
+
+    return true;
+}
+
+template <class T>
 bool test_from_bitset() noexcept
 {
     std::bitset<num_bits> bset{123456789ull};
@@ -57,6 +91,21 @@ bool test_to_bitset() noexcept
 
 int main(int, char**)
 {
+    std::cout << "\e[34;1m---\nTest binary digit representations\n---\e[m" << std::endl;
+    std::cout << "8bit binary representations:" << std::endl;
+    if(!test_bindigits<std::uint8_t>())
+        return EXIT_FAILURE;
+    std::cout << "16bit binary representations:" << std::endl;
+    if(!test_bindigits<std::uint16_t>())
+        return EXIT_FAILURE;
+    std::cout << "32bit binary representations:" << std::endl;
+    if(!test_bindigits<std::uint32_t>())
+        return EXIT_FAILURE;
+    std::cout << "64bit binary representations:" << std::endl;
+    if(!test_bindigits<std::uint64_t>())
+        return EXIT_FAILURE;
+    std::cout << "Passed." << std::endl;
+
     std::cout << "\e[34;1m---\nTest std::bitset -> BitArray\n---\e[m" << std::endl;
     std::cout << "8bit chunks:" << std::endl;
     if (!test_from_bitset<std::uint8_t>())
