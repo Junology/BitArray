@@ -41,7 +41,7 @@ bitset(std::bitset<N> const& src) noexcept
 {
     using target_t = BitArray<N,T>;
     return _impl::bitset_impl<T>(
-        std::make_index_sequence<target_t::length>(), src);
+        std::make_index_sequence<target_t::nchunks>(), src);
 }
 
 } // end namespace BitArray::from
@@ -55,7 +55,7 @@ std::bitset<N>
 bitset(BitArray<N,T> const& src) noexcept
 {
     std::bitset<N> result{};
-    for(std::size_t i = 0; i < BitArray<N,T>::length; ++i) {
+    for(std::size_t i = 0; i < BitArray<N,T>::nchunks; ++i) {
         result |= std::bitset<N>(src.getChunk(i)) << (i*BitArray<N,T>::chunkbits);
     }
 

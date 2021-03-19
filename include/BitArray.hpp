@@ -43,8 +43,8 @@ public:
     enum : std::size_t {
         numbits = N,
         chunkbits = std::numeric_limits<chunk_type>::digits,
-        length = (N + chunkbits - 1) / chunkbits,
-        max_index = length-1,
+        nchunks = (N + chunkbits - 1) / chunkbits,
+        max_index = nchunks-1,
         endbits = N % chunkbits
     };
 
@@ -68,8 +68,8 @@ public:
     template <std::size_t i>
     struct chunk_traits {
         enum : chunk_type {
-            mask = (i<length)
-            ? (endbits > 0 && i+1 == length // check if tail bit.
+            mask = (i<nchunks)
+            ? (endbits > 0 && i+1 == nchunks // check if tail bit.
                ? static_cast<chunk_type>(lowmask<endbits>::mask)
                : static_cast<chunk_type>(chunkval::nzero))
             : static_cast<chunk_type>(chunkval::zero)
@@ -77,7 +77,7 @@ public:
     };
 
 private:
-    chunk_type m_arr[length];
+    chunk_type m_arr[nchunks];
 
     //! Initialize from an array of chunk_type
     template <std::size_t... is>
@@ -118,7 +118,7 @@ public:
     //! Can be constructed from smaller BitArray with same chunk_type.
     template<size_t M, std::enable_if_t<(M<N), int> = 0>
     constexpr BitArray(BitArray<M,chunk_type> const& src) noexcept
-      : BitArray(std::make_index_sequence<BitArray<M,chunk_type>::length>(), src.m_arr)
+      : BitArray(std::make_index_sequence<BitArray<M,chunk_type>::nchunks>(), src.m_arr)
     {}
 
     //! Construct from a sequence of chunk_type's.
@@ -127,8 +127,8 @@ public:
         class... Ts,
         std::enable_if_t<
             conjunction_v<
-                (sizeof...(Ts)+2 <= length),
-                (sizeof...(Ts)+2 < length || endbits == 0),
+                (sizeof...(Ts)+2 <= nchunks),
+                (sizeof...(Ts)+2 < nchunks || endbits == 0),
                 std::is_convertible<Ts,chunk_type>::value...
                 >,
             int
@@ -146,8 +146,8 @@ public:
         class... Ts,
         std::enable_if_t<
             conjunction_v<
-                (sizeof...(Ts)+2 <= length),
-                (sizeof...(Ts)+2 == length && endbits > 0),
+                (sizeof...(Ts)+2 <= nchunks),
+                (sizeof...(Ts)+2 == nchunks && endbits > 0),
                 std::is_convertible<Ts,chunk_type>::value...
                 >,
             int
@@ -158,7 +158,7 @@ public:
                 static_cast<chunk_type>(x1),
                 static_cast<chunk_type>(xs)...}
     {
-        m_arr[length-1] &= lowmask<endbits>::mask;
+        m_arr[nchunks-1] &= lowmask<endbits>::mask;
     }
 
     //! Copy constructor is the default one.
@@ -244,7 +244,7 @@ public:
     //! Test if all the bits are true
     constexpr bool all() const noexcept
     {
-        for(std::size_t i = 0; i < length; ++i) {
+        for(std::size_t i = 0; i < nchunks; ++i) {
             if (m_arr[i] != get_mask(i))
                 return false;
         }
@@ -294,13 +294,13 @@ public:
     //! Count trailing zeros.
     constexpr std::size_t countTrail0() const noexcept {
         std::size_t result = 0;
-        for(std::size_t i = 0; i < length; ++i) {
+        for(std::size_t i = 0; i < nchunks; ++i) {
             std::size_t r = m_arr[i]
                 ? counttrail0<chunk_type>(m_arr[i])
                 : chunkbits;
 
             // Not at the end byte.
-            if (endbits == 0 || i+1 < length)
+            if (endbits == 0 || i+1 < nchunks)
                 result += r;
             // At the end byte.
             else {
@@ -335,10 +335,10 @@ public:
     //@{
     //! Get the value of chunks.
     //! \param i The index of chunks.
-    //! \return The value of the i-th chunk or 0 if i >= BitArray::length.
+    //! \return The value of the i-th chunk or 0 if i >= BitArray::nchunks.
     constexpr chunk_type getChunk(std::size_t i) const noexcept
     {
-        return i < length ? m_arr[i] : static_cast<chunk_type>(chunkval::zero);
+        return i < nchunks ? m_arr[i] : static_cast<chunk_type>(chunkval::zero);
     }
 
     //! Slicing array; a version for slicing into a larger bit-array.
@@ -358,21 +358,21 @@ public:
         -> std::enable_if_t<(n<N),BitArray<n,chunk_type>>
     {
         return slice_impl<n>(
-            std::make_index_sequence<BitArray<n,chunk_type>::length>(), i);
+            std::make_index_sequence<BitArray<n,chunk_type>::nchunks>(), i);
     }
 
     //! Inactivate lower bits.
     //! \param n The number of bits ignored.
     constexpr BitArray<N,chunk_type> lowcut(std::size_t n) const noexcept
     {
-        return n >= N ? BitArray<N,chunk_type>{} : lowcut_impl(std::make_index_sequence<length>(), n);
+        return n >= N ? BitArray<N,chunk_type>{} : lowcut_impl(std::make_index_sequence<nchunks>(), n);
     }
 
     //! Inactivate higher bits.
     //! \param n The number of bits kept considered.
     constexpr BitArray<N,chunk_type> lowpass(std::size_t n) const noexcept
     {
-        return n >= N ? *this : lowpass_impl(std::make_index_sequence<length>(), n);
+        return n >= N ? *this : lowpass_impl(std::make_index_sequence<nchunks>(), n);
     }
 
     //! Replace subarray with smaller array
@@ -395,9 +395,9 @@ public:
             = BitArray<M+chunkbits,chunk_type>{BitArray<M,chunk_type>{}.flip().lowpass(wid)} << lpos;
 
         // The number of loops
-        // Note that we here assume i < N so that gpos < length.
+        // Note that we here assume i < N so that gpos < nchunks.
         std::size_t num
-            = std::min(length-gpos, (M + lpos + chunkbits - 1) / chunkbits);
+            = std::min(nchunks-gpos, (M + lpos + chunkbits - 1) / chunkbits);
         for(size_t j = 0; j < num; ++j) {
             m_arr[gpos+j] &= ~(mask.m_arr[j]);
             m_arr[gpos+j] |= src_adj.m_arr[j];
@@ -417,7 +417,7 @@ public:
 
     //! Return the end of iterators visiting true bits.
     constexpr PopIterator<BitArray> popEnd() const noexcept {
-        return PopIterator<BitArray>(m_arr, length-1, 0);
+        return PopIterator<BitArray>(m_arr, nchunks-1, 0);
     }
     //@}
     // **/
@@ -454,7 +454,7 @@ public:
     constexpr BitArray<N,chunk_type>& operator=(U x) noexcept
     {
         m_arr[0] = x;
-        for(size_t i = 1; i < length; ++i) {
+        for(size_t i = 1; i < nchunks; ++i) {
             m_arr[i] = chunkval::zero;
         }
 
@@ -468,7 +468,7 @@ public:
 
     constexpr bool operator==(BitArray<N,chunk_type> const &other) const noexcept
     {
-        for(std::size_t i = 0; i < length; ++i)
+        for(std::size_t i = 0; i < nchunks; ++i)
             if(m_arr[i] != other.m_arr[i]) return false;
 
         return true;
@@ -481,38 +481,38 @@ public:
 
     constexpr BitArray<N,chunk_type>& operator&=(BitArray<N,chunk_type> const &other) noexcept
     {
-        for(size_t i = 0; i < length; ++i)
+        for(size_t i = 0; i < nchunks; ++i)
             m_arr[i] &= other.m_arr[i];
         return *this;
     }
 
     constexpr BitArray<N,chunk_type>& operator|=(BitArray<N,chunk_type> const &other) noexcept
     {
-        for(size_t i = 0; i < length; ++i)
+        for(size_t i = 0; i < nchunks; ++i)
             m_arr[i] |= other.m_arr[i];
         return *this;
     }
 
     constexpr BitArray<N,chunk_type>& operator^=(BitArray<N,chunk_type> const &other) noexcept
     {
-        for(size_t i = 0; i < length; ++i)
+        for(size_t i = 0; i < nchunks; ++i)
             m_arr[i] ^= other.m_arr[i];
         return *this;
     }
 
     constexpr BitArray<N,chunk_type> operator~() const noexcept
     {
-        return not_impl(std::make_index_sequence<length>());
+        return not_impl(std::make_index_sequence<nchunks>());
     }
 
     constexpr BitArray<N,chunk_type> operator<<(std::size_t n) const noexcept
     {
-        return lshift_impl(std::make_index_sequence<length>(), n);
+        return lshift_impl(std::make_index_sequence<nchunks>(), n);
     }
 
     constexpr BitArray<N,chunk_type> operator>>(std::size_t n) const noexcept
     {
-        return rshift_impl(std::make_index_sequence<length>(), n);
+        return rshift_impl(std::make_index_sequence<nchunks>(), n);
     }
 
     //! Prefix increment operator
@@ -532,8 +532,8 @@ public:
 protected:
     /** Some query on chunks **/
     static constexpr chunk_type get_mask(std::size_t i) noexcept {
-        return i<length
-            ? (endbits > 0 && i+1 == length // check if tail bit.
+        return i<nchunks
+            ? (endbits > 0 && i+1 == nchunks // check if tail bit.
                ? static_cast<chunk_type>(lowmask<endbits>::mask)
                : static_cast<chunk_type>(chunkval::nzero))
             : static_cast<chunk_type>(chunkval::zero);
@@ -550,15 +550,15 @@ protected:
 
         // Digits in the last chunk
         {
-            auto const last_digits = bindigits(m_arr[length-1],c0,c1);
+            auto const last_digits = bindigits(m_arr[nchunks-1],c0,c1);
             for(std::size_t j = 0; j < endbits; ++j) {
                 str[j] = last_digits[(chunkbits-endbits) + j];
             }
         }
 
         // Digits in the other chunks
-        for(std::size_t i = 0; i+1 < length; ++i) {
-            auto const chunk_digits = bindigits(m_arr[length - i - 2],c0,c1);
+        for(std::size_t i = 0; i+1 < nchunks; ++i) {
+            auto const chunk_digits = bindigits(m_arr[nchunks - i - 2],c0,c1);
             for(std::size_t j = 0; j < chunkbits; ++j) {
                 str[endbits + chunkbits*i + j] = chunk_digits[j];
             }
@@ -575,9 +575,9 @@ protected:
         std::size_t lpos = i % chunkbits;
 
         return BitArray<n,chunk_type>{static_cast<chunk_type>(
-                gpos+is >= length
+                gpos+is >= nchunks
                 ? 0u
-                : ((m_arr[gpos+is] >> lpos) | (gpos+is+1>=length ? 0u : (m_arr[gpos+is+1] << (chunkbits-lpos))))
+                : ((m_arr[gpos+is] >> lpos) | (gpos+is+1>=nchunks ? 0u : (m_arr[gpos+is+1] << (chunkbits-lpos))))
                 )...};
     }
 
@@ -642,9 +642,9 @@ protected:
         std::size_t lpos = n % chunkbits;
         return BitArray<N,chunk_type>(
             static_cast<chunk_type>(
-                is+gpos < length-1
+                is+gpos < nchunks-1
                 ? (m_arr[is+gpos] >> lpos | m_arr[is+gpos+1] << (chunkbits-lpos))
-                : ((is+gpos == length-1) ? (m_arr[length-1] >> lpos) : chunkval::zero )
+                : ((is+gpos == nchunks-1) ? (m_arr[nchunks-1] >> lpos) : chunkval::zero )
             )...
         );
     }
@@ -673,7 +673,7 @@ protected:
         }
         else {
             ++(m_arr[max_index]);
-            m_arr[max_index] &= chunk_traits<length>::mask;
+            m_arr[max_index] &= chunk_traits<nchunks>::mask;
         }
         return *this;
     }
