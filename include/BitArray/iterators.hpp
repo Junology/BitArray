@@ -131,7 +131,7 @@ class BitContainer
 {
     using traits = BitIteratorTraits<Itr,N,T>;
 
-    friend BitContainer range<Itr,N,T>(typename traits::target_ref_t) noexcept;
+    friend constexpr BitContainer range<Itr,N,T>(typename traits::target_ref_t) noexcept;
 
 public:
     //! Associated types

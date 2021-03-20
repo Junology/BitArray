@@ -87,7 +87,7 @@ private:
 
     template <std::size_t... is, class larger_t>
     constexpr BitArray(std::index_sequence<is...>, larger_t x0)
-        : m_arr{static_cast<chunk_type>(x0 >> (std::numeric_limits<chunk_type>::digits*is))...}
+        : m_arr{static_cast<chunk_type>((x0 >> (std::numeric_limits<chunk_type>::digits*is)) & chunk_traits<is>::mask)...}
     {}
 
 public:
@@ -112,7 +112,7 @@ public:
         int
         > = 0>
     constexpr BitArray(larger_t x0) noexcept
-        : BitArray(std::make_index_sequence<1+(std::numeric_limits<larger_t>::digits-1)/chunkbits>(), x0)
+        : BitArray(std::make_index_sequence<std::min(static_cast<std::size_t>(nchunks), 1+(std::numeric_limits<larger_t>::digits-1)/chunkbits)>(), x0)
     {}
 
     //! Can be constructed from smaller BitArray with same chunk_type.
