@@ -87,6 +87,24 @@ public:
     constexpr Matrix& operator=(Matrix && src) noexcept = default;
     //! \}
 
+    //! \name Comparison operators
+    //! \{
+    constexpr bool operator==(Matrix const& other) const noexcept
+    {
+        for(std::size_t i = 0; i < nvecs; ++i) {
+            if(m_vecs[i] != other.m_vecs[i])
+                return false;
+        }
+
+        return true;
+    }
+
+    constexpr bool operator!=(Matrix const& other) const noexcept
+    {
+        return !((*this)==other);
+    }
+    //! \}
+
     //! \name Queries
     //! \{
     constexpr std::size_t rows() const noexcept
@@ -99,9 +117,18 @@ public:
         return ncols;
     }
 
-    constexpr bool coeff(std::size_t r, std::size_t c) const noexcept
+    template <class T=std::true_type>
+    constexpr auto coeff(std::size_t r, std::size_t c) const noexcept
+        -> std::enable_if_t<T::value && mode==MatrixMode::RowMajor,bool>
     {
-        return coeff_impl<mode>(r,c);
+        return m_vecs[r].test(c);
+    }
+
+    template <class T=std::true_type>
+    constexpr auto coeff(std::size_t r, std::size_t c) const noexcept
+        -> std::enable_if_t<T::value && mode==MatrixMode::ColumnMajor,bool>
+    {
+        return m_vecs[c].test(r);
     }
 
     constexpr Vector vec(std::size_t i) const
@@ -145,6 +172,104 @@ public:
     }
     //! \}
 
+    //! \name Elementary row operations
+    //! \{
+    template <class T=std::true_type>
+    constexpr auto scalar_row(bool c, std::size_t itgt) noexcept
+        -> std::enable_if_t<T::value && mode==MatrixMode::RowMajor,Matrix&>
+    {
+        return scalar_vectors(c, itgt);
+    }
+
+    template <class T=std::true_type>
+    constexpr auto scalar_row(bool c, std::size_t itgt) noexcept
+        -> std::enable_if_t<T::value && mode==MatrixMode::ColumnMajor,Matrix&>
+    {
+        return scalar_in_vectors(c, itgt);
+    }
+
+    //! In the case i==j, this function does nothing.
+    template <class T=std::true_type>
+    constexpr auto swap_rows(std::size_t i, std::size_t j) noexcept
+        -> std::enable_if_t<T::value && mode==MatrixMode::RowMajor,Matrix&>
+    {
+        return swap_vectors(i, j);
+    }
+
+    //! In the case i==j, this function does nothing.
+    template <class T=std::true_type>
+    constexpr auto swap_rows(std::size_t i, std::size_t j) noexcept
+        -> std::enable_if_t<T::value && mode==MatrixMode::ColumnMajor,Matrix&>
+    {
+        return swap_in_vectors(i,j);
+    }
+
+    //! In the case isrc==itgt, this function is equivalent to scalar_rows(!c,isrc).
+    template <class T=std::true_type>
+    constexpr auto axpy_rows(bool c, std::size_t isrc, std::size_t itgt) noexcept
+        -> std::enable_if_t<T::value && mode==MatrixMode::RowMajor, Matrix&>
+    {
+        return axpy_vectors(c, isrc, itgt);
+    }
+
+    //! In the case isrc==itgt, this function is equivalent to scalar_rows(!c,isrc).
+    template <class T=std::true_type>
+    constexpr auto axpy_rows(bool c, std::size_t isrc, std::size_t itgt) noexcept
+        -> std::enable_if_t<T::value && mode==MatrixMode::ColumnMajor, Matrix&>
+    {
+        return axpy_in_vectors(c, isrc, itgt);
+    }
+    //! \}
+
+    //! \name Elementary column operations
+    //! \{
+    template <class T=std::true_type>
+    constexpr auto scalar_col(bool c, std::size_t itgt) noexcept
+        -> std::enable_if_t<T::value && mode==MatrixMode::RowMajor,Matrix&>
+    {
+        return scalar_in_vectors(c, itgt);
+    }
+
+    template <class T=std::true_type>
+    constexpr auto scalar_col(bool c, std::size_t itgt) noexcept
+        -> std::enable_if_t<T::value && mode==MatrixMode::ColumnMajor,Matrix&>
+    {
+        return scalar_vectors(c, itgt);
+    }
+
+    //! In the case i==j, this function does nothing.
+    template <class T=std::true_type>
+    constexpr auto swap_cols(std::size_t i, std::size_t j) noexcept
+        -> std::enable_if_t<T::value && mode==MatrixMode::RowMajor,Matrix&>
+    {
+        return swap_in_vectors(i,j);
+    }
+
+    //! In the case i==j, this function does nothing.
+    template <class T=std::true_type>
+    constexpr auto swap_cols(std::size_t i, std::size_t j) noexcept
+        -> std::enable_if_t<T::value && mode==MatrixMode::ColumnMajor,Matrix&>
+    {
+        return swap_vectors(i,j);
+    }
+
+    //! In the case isrc==itgt, this function is equivalent to scalar_cols(!c,isrc).
+    template <class T=std::true_type>
+    constexpr auto axpy_cols(bool c, std::size_t isrc, std::size_t itgt) noexcept
+        -> std::enable_if_t<T::value && mode==MatrixMode::RowMajor,Matrix&>
+    {
+        return axpy_in_vectors(c, isrc, itgt);
+    }
+
+    //! In the case isrc==itgt, this function is equivalent to scalar_cols(!c,isrc).
+    template <class T=std::true_type>
+    constexpr auto axpy_cols(bool c, std::size_t isrc, std::size_t itgt) noexcept
+        -> std::enable_if_t<T::value && mode==MatrixMode::ColumnMajor,Matrix&>
+    {
+        return axpy_vectors(c, isrc, itgt);
+    }
+    //! \}
+
     //! \name Construction of special types of matrices.
     //! \{
 
@@ -168,6 +293,66 @@ private:
      * \name Implementations that work in both modes.
      */
     //! \{
+    constexpr Matrix& scalar_in_vectors(bool c, std::size_t i) noexcept
+    {
+        if (!c) {
+            for(auto& v : m_vecs)
+                v.reset(i);
+        }
+        return *this;
+    }
+
+    constexpr Matrix& scalar_vectors(bool c, std::size_t i) noexcept
+    {
+        if (!c)
+            m_vecs[i].reset();
+        return *this;
+    }
+
+    //! Safe to use even if i==j.
+    constexpr Matrix& swap_in_vectors(std::size_t i, std::size_t j) noexcept
+    {
+        for(auto& v : m_vecs) {
+            bool aux = v.test(i);
+            v.set(i, v.test(j));
+            v.set(j, aux);
+        }
+        return *this;
+    }
+
+    //! Safe to use even if i==j.
+    constexpr Matrix& swap_vectors(std::size_t i, std::size_t j) noexcept
+    {
+        if (i!=j) {
+            m_vecs[i] ^= m_vecs[j];
+            m_vecs[j] ^= m_vecs[i];
+            m_vecs[i] ^= m_vecs[j];
+        }
+        return *this;
+    }
+
+    constexpr Matrix&
+    axpy_in_vectors(bool c, std::size_t isrc, std::size_t itgt)
+        noexcept
+    {
+        if(c) {
+            for(auto& v : m_vecs) {
+                if(v.test(isrc))
+                    v.flip(itgt);
+            }
+        }
+        return *this;
+    }
+
+    constexpr Matrix&
+    axpy_vectors(bool c, std::size_t isrc, std::size_t itgt)
+        noexcept
+    {
+        if(c)
+            m_vecs[itgt] ^= m_vecs[isrc];
+        return *this;
+    }
+
     template <std::size_t... Is>
     static constexpr
     Matrix diagonal_impl(
@@ -179,34 +364,6 @@ private:
             (Is < veclength && diag_vec.test(Is))
             ? BA{}.set(Is) : BA{}
             ...);
-    }
-    //! \}
-
-    /*!
-     * \name Implementations in RowMajor mode.
-     */
-    //! \{
-    template <
-        MatrixMode M,
-        std::enable_if_t< M == MatrixMode::RowMajor, int> = 0
-        >
-    constexpr bool coeff_impl(std::size_t r, std::size_t c) const noexcept
-    {
-        return m_vecs[r].test(c);
-    }
-    //! \}
-
-    /*!
-     * \name Implementations in ColumnMajor mode.
-     */
-    //! \{
-    template <
-        MatrixMode M,
-        std::enable_if_t< M == MatrixMode::ColumnMajor, int> = 0
-        >
-    constexpr bool coeff_impl(std::size_t r, std::size_t c) const noexcept
-    {
-        return m_vecs[c].test(r);
     }
     //! \}
 };

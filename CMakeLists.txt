@@ -57,6 +57,7 @@ mk_test(iterator_test "test/iterator_test.cpp")
 mk_test(latraits_test "test/latraits_test.cpp")
 mk_test(vector_test "test/vector_test.cpp")
 mk_test(matrix_test "test/matrix_test.cpp")
+mk_test(matrixop_test "test/matrixop_test.cpp")
 
 
 ## Benchmarks
