@@ -10,9 +10,13 @@
 
 #include <algorithm>
 #include <limits>
-#include <ios>
 
 #include "detail/utils.hpp"
+
+//* Debug
+#include <iostream>
+#include <bitset>
+//*/
 
 namespace BitArray {
 
@@ -479,6 +483,36 @@ public:
         return !((*this)==other);
     }
 
+    //! Anti-lexicographical comparison; i.e. higher chunks are compared first.
+    //! Note that this comparison is compatible with those for integral types.
+    //! Indeed, BitArray<64>(m) < BitArray<64>(n) precisely if m < n.
+    constexpr bool operator<(BitArray const &other) const noexcept
+    {
+        for(std::size_t i = nchunks; i > 0; --i) {
+            if (m_arr[i-1] < other.m_arr[i-1])
+                return true;
+            if (m_arr[i-1] > other.m_arr[i-1])
+                return false;
+        }
+
+        return false;
+    }
+
+    //! Anti-lexicographical comparison; i.e. higher chunks are compared first.
+    //! Note that this comparison is compatible with those for integral types.
+    //! Indeed, BitArray<64>(m) > BitArray<64>(n) precisely if m > n.
+    constexpr bool operator>(BitArray const &other) const noexcept
+    {
+        for(std::size_t i = nchunks; i > 0; --i) {
+            if (m_arr[i-1] < other.m_arr[i-1])
+                return false;
+            if (m_arr[i-1] > other.m_arr[i-1])
+                return true;
+        }
+
+        return false;
+    }
+
     constexpr BitArray<N,chunk_type>& operator&=(BitArray<N,chunk_type> const &other) noexcept
     {
         for(size_t i = 0; i < nchunks; ++i)
@@ -524,6 +558,18 @@ public:
     constexpr BitArray<N,chunk_type> operator++(int) noexcept {
         auto aux = *this;
         ++(*this);
+        return aux;
+    }
+
+    //! Prefix decrement operator
+    constexpr BitArray& operator--() noexcept {
+        return decrement_impl(std::integral_constant<std::size_t,0>{});
+    }
+
+    //! Postfix decrement operator
+    constexpr BitArray operator--(int) noexcept {
+        auto aux = *this;
+        --(*this);
         return aux;
     }
 
@@ -653,33 +699,48 @@ protected:
     template <
         std::size_t i,
         std::enable_if_t<(i<max_index), int> = 0>
-    inline constexpr BitArray<N,chunk_type>& increment_impl(std::integral_constant<std::size_t, i>) noexcept
+    inline constexpr BitArray&
+    increment_impl(std::integral_constant<std::size_t, i>) noexcept
     {
-        if (m_arr[i] == std::numeric_limits<chunk_type>::max()) {
-            m_arr[i] = static_cast<chunk_type>(0u);
-
+        ++(m_arr[i]);
+        if (!m_arr[i])
             return increment_impl(std::integral_constant<std::size_t,i+1>());
-        }
-        else {
-            ++(m_arr[i]);
-            return *this;
-        }
+
+        return *this;
     }
 
-    inline constexpr BitArray<N,chunk_type>& increment_impl(std::integral_constant<std::size_t, max_index>) noexcept
+    inline constexpr BitArray&
+    increment_impl(std::integral_constant<std::size_t, max_index>) noexcept
     {
-        if (m_arr[max_index] == std::numeric_limits<chunk_type>::max()) {
-            m_arr[max_index] = static_cast<chunk_type>(0u);
-        }
-        else {
-            ++(m_arr[max_index]);
-            m_arr[max_index] &= chunk_traits<nchunks>::mask;
-        }
+        ++(m_arr[max_index]);
+        m_arr[max_index] &= chunk_traits<max_index>::mask;
+
+        return *this;
+    }
+
+    template <std::size_t i, std::enable_if_t<(i<max_index),int> = 0>
+    inline constexpr
+    BitArray& decrement_impl(std::integral_constant<std::size_t,i>)
+        noexcept
+    {
+        --(m_arr[i]);
+        if(m_arr[i] == chunkval::nzero)
+            return decrement_impl(std::integral_constant<std::size_t,i+1>{});
+
+        return *this;
+    }
+
+    inline constexpr
+    BitArray& decrement_impl(std::integral_constant<std::size_t,max_index>)
+        noexcept
+    {
+        --(m_arr[max_index]);
+        m_arr[max_index] &= chunk_traits<max_index>::mask;
         return *this;
     }
 }; // End of BitArray class definition.
 
-//!\group Non-member operator overloads
+//! \name Non-member operator overloads
 //!\{
 template<size_t N, class T>
 constexpr BitArray<N,T> operator&(BitArray<N,T> lhs, BitArray<N,T> const& rhs) noexcept
@@ -700,15 +761,6 @@ constexpr BitArray<N,T> operator^(BitArray<N,T> lhs, BitArray<N,T> const& rhs) n
 {
     lhs ^= rhs;
     return lhs;
-}
-
-template<class C, size_t N, class T>
-std::ostream& operator<<(std::basic_ostream<C>& out, BitArray<N,T> const& bit)
-{
-    for(size_t i = 0; i < N; ++i)
-        out.put(bit.test(N-i-1) ? '1' : '0');
-
-    return out;
 }
 //!\}
 

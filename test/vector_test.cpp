@@ -4,6 +4,7 @@
 #include "LA/traits.hpp"
 #include "LA/vector.hpp"
 #include "BitArray.hpp"
+#include "BitArray/manipulation.hpp"
 
 constexpr std::size_t num_bits = 617;
 constexpr std::size_t num_loop = 0x8000;

@@ -5,6 +5,7 @@
 #include "LA/vector.hpp"
 #include "LA/matrix.hpp"
 #include "BitArray.hpp"
+#include "BitArray/manipulation.hpp"
 
 constexpr std::size_t num_bits = 71;
 constexpr std::size_t num_vecs = 39;

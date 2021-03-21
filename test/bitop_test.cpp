@@ -3,6 +3,7 @@
 
 #include "BitArray.hpp"
 #include "BitArray/transforms.hpp"
+#include "BitArray/manipulation.hpp"
 
 constexpr std::size_t num_bits = 317;
 constexpr std::size_t num_loop = 0x8000;
@@ -101,6 +102,17 @@ bool test_not() noexcept
 template <class T>
 bool test_increment() noexcept
 {
+    // max + 1 should be 0.
+    {
+        auto x = BitArray::BitArray<num_bits>{}.flip();
+        ++x;
+        if(x) {
+            std::cerr << __func__ << "@" << __LINE__ << std::endl;
+            std::cerr << x << std::endl;
+            return false;
+        }
+    }
+
     constexpr unsigned long addee_num = 10000u;
     BitArray::BitArray<num_bits> bset{123456789ull};
     BitArray::BitArray<num_bits> addee{addee_num};
