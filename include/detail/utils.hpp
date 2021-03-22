@@ -159,6 +159,31 @@ constexpr T counttrail0(T x) noexcept
     return popcount<T>(~x & (x-1));
 }
 
+//! Binomial coefficients
+//! \return 0 if k < 0 or k > n.
+//! \remark The return type is the same as those of arguments.
+template<class T>
+constexpr T binom(T n, T k) noexcept
+{
+    if (k < 0 || k > n)
+        return 0;
+
+    if (k > n-k)
+        k = n-k;
+
+    if (k == 0)
+        return 1;
+
+    T result = 1;
+
+    for (T i = 0; i < k; ++i) {
+        result *= n-i;
+        result /= (i+1);
+    }
+
+    return result;
+}
+
 //! \function bindigits
 //! Convert an (unsigned) integral value into a binary representation string.
 //! \tparam IsRev If IsRev::value == true, then the resulting representation is aligned from lower-bits to higher-bits.

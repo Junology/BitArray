@@ -664,7 +664,8 @@ protected:
     template <std::size_t... is>
     constexpr BitArray<N,chunk_type> not_impl(std::index_sequence<is...>) const noexcept
     {
-        return BitArray<N,chunk_type>(static_cast<chunk_type>(~m_arr[is])...);
+        return BitArray<N,chunk_type>(
+            static_cast<chunk_type>(~m_arr[is])&chunk_traits<is>::mask...);
     }
 
     template<std::size_t... is>

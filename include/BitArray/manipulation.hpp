@@ -13,6 +13,7 @@
 #include <ios>
 
 #include "../BitArray.hpp"
+#include "iterators.hpp"
 
 namespace BitArray {
 
@@ -94,6 +95,18 @@ constexpr bool nextperm(T &x) noexcept
     bool is_maximal = (x == static_cast<T>(~T{0ull}));
     x = _impl::plus_one(x) | (_impl::minus_one((~x & _impl::plus_one(x))) >> (i+1));
     return is_maximal;
+}
+
+//! The lexicographical index of a given bit-permutation.
+template <std::size_t N, class T>
+constexpr std::size_t permindex(BitArray<N,T> const& barr) noexcept
+{
+    std::size_t result = 0;
+    std::size_t cnt = 0;
+    for(auto i : range<PopIterator>(barr))
+        result += binom(i,++cnt);
+
+    return result;
 }
 
 } // end namespace BitArray
