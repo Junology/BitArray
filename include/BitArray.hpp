@@ -317,7 +317,26 @@ public:
         }
         return result;
     }
+    //@}
 
+    /**********************************!
+     * \name swap with another object
+     **********************************/
+    constexpr void swap(BitArray& other) noexcept
+    {
+        if(this != &other) {
+            for(std::size_t i = 0; i < nchunks; ++i) {
+                m_arr[i] ^= other.m_arr[i];
+                other.m_arr[i] ^= m_arr[i];
+                m_arr[i] ^= other.m_arr[i];
+            }
+        }
+    }
+
+    /**********************************!
+     * \name Conversion into strings
+     **********************************/
+    //@{
     //! Get the states of the bits as an array of characters.
     constexpr std::array<char,numbits>
     digits(char c0 = '0', char c1 = '1')
