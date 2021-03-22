@@ -78,6 +78,14 @@ constexpr T bitwave(std::size_t width) noexcept
     return result;
 }
 
+template <class T, std::size_t w>
+struct bitwave_const {
+    enum : T {
+        value = bitwave<T>(w),
+        cval = static_cast<T>(~value)
+    };
+};
+
 /*!
  * \function popcount
  * Population-count (aka. Hamming weight).
@@ -96,10 +104,6 @@ constexpr T bitwave(std::size_t width) noexcept
  * Therefore, continuing the process, we can compute popcount(x).
  */
 namespace _impl {
-template <class T, std::size_t w>
-struct bitwave_const {
-    enum {value = bitwave<T>(w)};
-};
 
 template <
     class T, std::size_t i,
@@ -157,6 +161,51 @@ constexpr T counttrail0(T x) noexcept
                   "std::is_unsigned<T>::value == false");
 
     return popcount<T>(~x & (x-1));
+}
+
+//! \function msb
+//! Find the Most Significant Bit (aka. the highest set bit).
+namespace _impl {
+
+template <class T>
+constexpr std::size_t
+msb_impl(
+    T x,
+    std::integral_constant<std::size_t,std::numeric_limits<T>::digits>
+    ) noexcept
+{
+    constexpr std::size_t i = std::numeric_limits<T>::digits;
+    return i*(
+        (bitwave_const<T,i>::value & x)
+        < (bitwave_const<T,i>::cval & x)
+        );
+}
+
+template <
+    class T,
+    std::size_t I,
+    std::enable_if_t<(I < std::numeric_limits<T>::digits),int> = 0
+    >
+constexpr std::size_t
+msb_impl(T x, std::integral_constant<std::size_t, I>)
+    noexcept
+{
+    return (I*((bitwave_const<T,I>::value & x)
+               < (bitwave_const<T,I>::cval & x)
+                )
+        )
+        | msb_impl(x, std::integral_constant<std::size_t,I<<1>{});
+}
+
+} // close namespace _impl
+
+template <class T>
+constexpr std::size_t msb(T x) noexcept
+{
+    if(!x)
+        return std::numeric_limits<T>::digits;
+
+    return _impl::msb_impl(x, std::integral_constant<std::size_t,1>{});
 }
 
 //! Binomial coefficients

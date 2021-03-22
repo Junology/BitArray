@@ -9,6 +9,7 @@
 #include <iostream>
 #include <limits>
 #include <tuple>
+#include <bitset>
 
 #include "detail/utils.hpp"
 
@@ -66,6 +67,21 @@ bool test1() {
     return true;
 }
 
+template <class T, T max = std::numeric_limits<T>::max()>
+bool test_msb() noexcept
+{
+    for(T x = T{1u}; x < max; ++x) {
+        if((x >> BitArray::msb(x)) != 1u) {
+            std::cerr << "Wrong MSB:" << std::endl;
+            std::cerr << BitArray::msb(x) << "@"
+                      << std::bitset<std::numeric_limits<T>::digits>(x)
+                      << std::endl;
+            return false;
+        }
+    }
+    return true;
+}
+
 int main(int, char**)
 {
     std::cout << "\e[34;1m---\nmake_from_tuple\n---\e[m" << std::endl;
@@ -95,6 +111,10 @@ int main(int, char**)
         std::cerr << "Test fails." << std::endl;
         return EXIT_FAILURE;
     }
+    std::cout << "Most Significant Bit:" << std::endl;
+    if(!test_msb<uint8_t,0xFFu>()) {
+        return EXIT_FAILURE;
+    }
     std::cout << "Pass." << std::endl;
 
     std::cout << "\e[34;1m---\nTest for 16 bits\n---\e[m" << std::endl;
@@ -106,6 +126,10 @@ int main(int, char**)
     std::cout << "Count of trailing 1:" << std::endl;
     if(!test1<uint16_t,0xFFFFu>()) {
         std::cerr << "Test fails." << std::endl;
+        return EXIT_FAILURE;
+    }
+    std::cout << "Most Significant Bit:" << std::endl;
+    if(!test_msb<uint16_t>()) {
         return EXIT_FAILURE;
     }
     std::cout << "Pass." << std::endl;
@@ -121,6 +145,10 @@ int main(int, char**)
         std::cerr << "Test fails." << std::endl;
         return EXIT_FAILURE;
     }
+    std::cout << "Most Significant Bit:" << std::endl;
+    if(!test_msb<uint32_t,0xFFFFFFu>()) {
+        return EXIT_FAILURE;
+    }
     std::cout << "Pass." << std::endl;
 
 #ifdef UINT64_MAX
@@ -133,6 +161,10 @@ int main(int, char**)
     std::cout << "Count of trailing 1:" << std::endl;
     if(!test1<uint64_t,0xFFFFFFu>()) {
         std::cerr << "Test fails." << std::endl;
+        return EXIT_FAILURE;
+    }
+    std::cout << "Most Significant Bit:" << std::endl;
+    if(!test_msb<uint64_t,0xFFFFFFu>()) {
         return EXIT_FAILURE;
     }
     std::cout << "Pass." << std::endl;
