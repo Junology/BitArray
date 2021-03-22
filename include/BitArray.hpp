@@ -317,6 +317,16 @@ public:
         }
         return result;
     }
+
+    //! Compute the position of the Most Significant Bit.
+    //! If there is no bit set, then return the number of all bits in the array.
+    constexpr std::size_t msb() const noexcept {
+        for(std::size_t i = nchunks; i > 0; --i) {
+            if(m_arr[i-1])
+                return msb(m_arr[i-1]) + chunkbits*(i-1);
+        }
+        return numbits;
+    }
     //@}
 
     /**********************************!
