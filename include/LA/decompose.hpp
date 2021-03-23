@@ -16,18 +16,24 @@
 namespace BitLA {
 namespace decomp {
 
-//! Transform a matrix into a matrix which is lower-triangular up to a permutation of rows.
-//! \code
-//! auto mat = mat0;
-//! auto [v,w] = plu(mat);
-//! assert(is_upper_triangular(v));
-//! assert(mat*v == mat0 && v*w == ident && w*v == ident);
-//! \endcode
-//! \post mat is lower-triangular up to a permutation of rows.
-template <class T,std::size_t m,std::size_t n>
+/*!
+ * \function plu
+ * Transform a matrix into a matrix which is lower-triangular up to a permutation of rows.
+ * \code
+ * auto mat = mat0;
+ * auto [v,w] = plu(mat);
+ * assert(is_upper_triangular(v));
+ * assert(mat*v == mat0 && v*w == ident && w*v == ident);
+ * \endcode
+ * \post mat is lower-triangular up to a permutation of rows.
+ */
+namespace _impl {
+
+//! \param f A function of signature std::size_t(herring::BitArray<m,T>) that returns the index of a non-zero bit. It must return m in the case the given vector has no non-zero bit.
+template <class T,std::size_t m,std::size_t n, class F>
 constexpr
 std::array<Matrix<herring::BitArray<n,T>,n,MatrixMode::ColumnMajor>,2>
-plu(Matrix<herring::BitArray<m,T>,n,MatrixMode::ColumnMajor> & mat)
+plu_impl(Matrix<herring::BitArray<m,T>,n,MatrixMode::ColumnMajor> & mat, F&& f)
     noexcept
 {
     using tmat_t = Matrix<herring::BitArray<n,T>,n,MatrixMode::ColumnMajor>;
@@ -35,9 +41,11 @@ plu(Matrix<herring::BitArray<m,T>,n,MatrixMode::ColumnMajor> & mat)
     std::array<tmat_t,2> result{ident, ident};
 
     for(std::size_t i = 0; i+1 < n; ++i) {
-        // Compute the top non-zero row (aka. pivot) in the i-th column.
-        std::size_t piv = mat.vec(i).countTrail0();
-        if (piv == m) // The column is itself zero.
+        // Specify a non-zero row (aka. pivot) in the i-th column in a certain mannar.
+        std::size_t piv = f(mat.vec(i));
+
+        // Skip zero-columns.
+        if (piv == m)
             continue;
 
         // Transformation matrix
@@ -57,6 +65,39 @@ plu(Matrix<herring::BitArray<m,T>,n,MatrixMode::ColumnMajor> & mat)
     }
 
     return result;
+}
+
+} // close namespace _impl
+
+template <class T,std::size_t m,std::size_t n>
+constexpr
+std::array<Matrix<herring::BitArray<n,T>,n,MatrixMode::ColumnMajor>,2>
+plu(Matrix<herring::BitArray<m,T>,n,MatrixMode::ColumnMajor> & mat)
+    noexcept
+{
+    struct _lambda {
+        constexpr std::size_t operator()(herring::BitArray<m,T> const& v) noexcept
+        {
+            return v.countTrail0();
+        }
+    };
+    return _impl::plu_impl(mat, _lambda{});
+}
+
+//! Similar to \sa{plu} while this uses the last non-zero rows instead of the first.
+template <class T,std::size_t m,std::size_t n>
+constexpr
+std::array<Matrix<herring::BitArray<n,T>,n,MatrixMode::ColumnMajor>,2>
+plu_lnr(Matrix<herring::BitArray<m,T>,n,MatrixMode::ColumnMajor> & mat)
+    noexcept
+{
+    struct _lambda {
+        constexpr std::size_t operator()(herring::BitArray<m,T> const& v) noexcept
+        {
+            return v.msb();
+        }
+    };
+    return _impl::plu_impl(mat, _lambda{});
 }
 
 } // close namespace decomp
