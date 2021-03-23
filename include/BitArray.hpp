@@ -300,8 +300,8 @@ public:
         std::size_t result = 0;
         for(std::size_t i = 0; i < nchunks; ++i) {
             std::size_t r = m_arr[i]
-                ? counttrail0<chunk_type>(m_arr[i])
-                : chunkbits;
+                ? static_cast<std::size_t>(counttrail0<chunk_type>(m_arr[i]))
+                : static_cast<std::size_t>(chunkbits);
 
             // Not at the end byte.
             if (endbits == 0 || i+1 < nchunks)
@@ -678,10 +678,11 @@ protected:
         std::size_t gpos = n / chunkbits;
         std::size_t lpos = n % chunkbits;
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wnarrowing"
-        chunk_type mask{lpos > 0u ? static_cast<chunk_type>(chunkval::nzero >> (chunkbits - lpos)) : chunkval::zero};
-#pragma GCC diagnostic pop
+        chunk_type mask{
+            lpos > 0u
+            ? static_cast<chunk_type>(chunkval::nzero >> (chunkbits - lpos))
+            : static_cast<chunk_type>(chunkval::zero)
+        };
 
         return BitArray<N,chunk_type>(
             static_cast<chunk_type>(
