@@ -17,8 +17,8 @@ T quasi_xorshift(T x) {
 }
 
 template <std::size_t n, class T>
-constexpr BitArray::BitArray<n,T> mkFizzBuzzBits() noexcept {
-    BitArray::BitArray<n,T> result{0u};
+constexpr herring::BitArray<n,T> mkFizzBuzzBits() noexcept {
+    herring::BitArray<n,T> result{0u};
 
     // Set bitarr to be "fizz-buzz" bits (or-mixed).
     for(std::size_t i = 0; i < n; ++i) {
@@ -32,10 +32,10 @@ constexpr BitArray::BitArray<n,T> mkFizzBuzzBits() noexcept {
 
 template <std::size_t n, class T>
 bool fizzbuzz_test() {
-    constexpr BitArray::BitArray<n,T> bitarr = mkFizzBuzzBits<n,T>();
+    constexpr herring::BitArray<n,T> bitarr = mkFizzBuzzBits<n,T>();
     auto tester = bitarr;
 
-    auto rng = BitArray::range<BitArray::PopIterator>(bitarr);
+    auto rng = herring::range<herring::PopIterator>(bitarr);
     for(auto itr = rng.begin(); itr != rng.end(); ++itr) {
         if (*itr >= n || !bitarr.test(*itr))
             return false;
@@ -50,12 +50,12 @@ bool fizzbuzz_test() {
 
 template <std::size_t n, class T>
 bool xorshift_test() {
-    constexpr BitArray::BitArray<n,T> bitarr{314159265358979ull};
+    constexpr herring::BitArray<n,T> bitarr{314159265358979ull};
     auto tester = bitarr;
 
     for(std::size_t cnt = 0; cnt < num_loops; ++cnt) {
         decltype(tester) aux{};
-        for(auto i : BitArray::range<BitArray::PopIterator>(tester)) {
+        for(auto i : herring::range<herring::PopIterator>(tester)) {
             if (i >= n) {
                 std::cerr << __func__ << "@" << __LINE__ << ":" << std::endl;
                 std::cerr << tester << std::endl;

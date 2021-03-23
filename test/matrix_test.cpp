@@ -27,10 +27,10 @@ T quasi_xorshift2(T x) {
 }
 
 template <std::size_t n, class T>
-constexpr BitLA::Matrix<BitArray::BitArray<n,T>,n,BitLA::MatrixMode::RowMajor>
+constexpr BitLA::Matrix<herring::BitArray<n,T>,n,BitLA::MatrixMode::RowMajor>
 xorshift_rowmat() noexcept
 {
-    using vec_t = BitArray::BitArray<n,T>;
+    using vec_t = herring::BitArray<n,T>;
     using mat_t = BitLA::Matrix<vec_t,n,BitLA::MatrixMode::RowMajor>;
 
     // 13 left shift
@@ -52,10 +52,10 @@ xorshift_rowmat() noexcept
 }
 
 template <std::size_t n, class T>
-constexpr BitLA::Matrix<BitArray::BitArray<n,T>,n,BitLA::MatrixMode::ColumnMajor>
+constexpr BitLA::Matrix<herring::BitArray<n,T>,n,BitLA::MatrixMode::ColumnMajor>
 xorshift_colmat() noexcept
 {
-    using vec_t = BitArray::BitArray<n,T>;
+    using vec_t = herring::BitArray<n,T>;
     using mat_t = BitLA::Matrix<vec_t,n,BitLA::MatrixMode::ColumnMajor>;
 
     // 13 left shift
@@ -81,7 +81,7 @@ bool test_xorshift() noexcept
 {
     constexpr auto mat_row = xorshift_rowmat<n,T>();
     constexpr auto mat_col = xorshift_colmat<n,T>();
-    BitArray::BitArray<n,T> vec{314159265358979ull};
+    herring::BitArray<n,T> vec{314159265358979ull};
 
     for(std::size_t i = 0; i < num_loop; ++i) {
         vec = quasi_xorshift2(vec);
@@ -226,16 +226,16 @@ int main(int, char**)
     if (!test_identity<std::bitset<num_bits>>())
         return EXIT_FAILURE;
     std::cout << "BitArray with 8bit chunks" << std::endl;
-    if (!test_identity<BitArray::BitArray<num_bits,uint8_t>>())
+    if (!test_identity<herring::BitArray<num_bits,uint8_t>>())
         return EXIT_FAILURE;
     std::cout << "BitArray with 16bit chunks" << std::endl;
-    if (!test_identity<BitArray::BitArray<num_bits,uint16_t>>())
+    if (!test_identity<herring::BitArray<num_bits,uint16_t>>())
         return EXIT_FAILURE;
     std::cout << "BitArray with 32bit chunks" << std::endl;
-    if (!test_identity<BitArray::BitArray<num_bits,uint32_t>>())
+    if (!test_identity<herring::BitArray<num_bits,uint32_t>>())
         return EXIT_FAILURE;
     std::cout << "BitArray with 64bit chunks" << std::endl;
-    if (!test_identity<BitArray::BitArray<num_bits,uint64_t>>())
+    if (!test_identity<herring::BitArray<num_bits,uint64_t>>())
         return EXIT_FAILURE;
     std::cout << "Passed." << std::endl;
 
@@ -244,13 +244,13 @@ int main(int, char**)
     if (!test_xorshift<num_bits,uint8_t>())
         return EXIT_FAILURE;
     std::cout << "BitArray with 16bit chunks" << std::endl;
-    if (!test_identity<BitArray::BitArray<num_bits,uint16_t>>())
+    if (!test_identity<herring::BitArray<num_bits,uint16_t>>())
         return EXIT_FAILURE;
     std::cout << "BitArray with 32bit chunks" << std::endl;
-    if (!test_identity<BitArray::BitArray<num_bits,uint32_t>>())
+    if (!test_identity<herring::BitArray<num_bits,uint32_t>>())
         return EXIT_FAILURE;
     std::cout << "BitArray with 64bit chunks" << std::endl;
-    if (!test_identity<BitArray::BitArray<num_bits,uint64_t>>())
+    if (!test_identity<herring::BitArray<num_bits,uint64_t>>())
         return EXIT_FAILURE;
     std::cout << "Passed." << std::endl;
 
@@ -262,28 +262,28 @@ int main(int, char**)
     if (!test_mult<std::bitset<num_bits>,BitLA::MatrixMode::ColumnMajor>())
         return EXIT_FAILURE;
     std::cout << "BitArray with 8bit chunks@RowMajor" << std::endl;
-    if (!test_mult<BitArray::BitArray<num_bits,uint8_t>,BitLA::MatrixMode::RowMajor>())
+    if (!test_mult<herring::BitArray<num_bits,uint8_t>,BitLA::MatrixMode::RowMajor>())
         return EXIT_FAILURE;
     std::cout << "BitArray with 8bit chunks@ColumnMajor" << std::endl;
-    if (!test_mult<BitArray::BitArray<num_bits,uint8_t>,BitLA::MatrixMode::ColumnMajor>())
+    if (!test_mult<herring::BitArray<num_bits,uint8_t>,BitLA::MatrixMode::ColumnMajor>())
         return EXIT_FAILURE;
     std::cout << "BitArray with 16bit chunks@RowMajor" << std::endl;
-    if (!test_mult<BitArray::BitArray<num_bits,uint16_t>,BitLA::MatrixMode::RowMajor>())
+    if (!test_mult<herring::BitArray<num_bits,uint16_t>,BitLA::MatrixMode::RowMajor>())
         return EXIT_FAILURE;
     std::cout << "BitArray with 16bit chunks@ColumnMajor" << std::endl;
-    if (!test_mult<BitArray::BitArray<num_bits,uint16_t>,BitLA::MatrixMode::ColumnMajor>())
+    if (!test_mult<herring::BitArray<num_bits,uint16_t>,BitLA::MatrixMode::ColumnMajor>())
         return EXIT_FAILURE;
     std::cout << "BitArray with 32bit chunks@RowMajor" << std::endl;
-    if (!test_mult<BitArray::BitArray<num_bits,uint32_t>,BitLA::MatrixMode::RowMajor>())
+    if (!test_mult<herring::BitArray<num_bits,uint32_t>,BitLA::MatrixMode::RowMajor>())
         return EXIT_FAILURE;
     std::cout << "BitArray with 32bit chunks@ColumnMajor" << std::endl;
-    if (!test_mult<BitArray::BitArray<num_bits,uint32_t>,BitLA::MatrixMode::ColumnMajor>())
+    if (!test_mult<herring::BitArray<num_bits,uint32_t>,BitLA::MatrixMode::ColumnMajor>())
         return EXIT_FAILURE;
     std::cout << "BitArray with 64bit chunks@RowMajor" << std::endl;
-    if (!test_mult<BitArray::BitArray<num_bits,uint64_t>,BitLA::MatrixMode::RowMajor>())
+    if (!test_mult<herring::BitArray<num_bits,uint64_t>,BitLA::MatrixMode::RowMajor>())
         return EXIT_FAILURE;
     std::cout << "BitArray with 64bit chunks@ColumnMajor" << std::endl;
-    if (!test_mult<BitArray::BitArray<num_bits,uint64_t>,BitLA::MatrixMode::ColumnMajor>())
+    if (!test_mult<herring::BitArray<num_bits,uint64_t>,BitLA::MatrixMode::ColumnMajor>())
         return EXIT_FAILURE;
 
     return EXIT_SUCCESS;

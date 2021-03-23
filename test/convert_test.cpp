@@ -22,7 +22,7 @@ bool test_bindigits() noexcept
     constexpr T x0 = static_cast<T>(123456789ull);
 
     // bindigits() can be computed in compile-time.
-    constexpr auto x0_bin = BitArray::bindigits(x0);
+    constexpr auto x0_bin = herring::bindigits(x0);
     std::string str0(x0_bin.data(), x0_bin.size());
 
     if(bset_t(x0).to_string() != str0) {
@@ -35,7 +35,7 @@ bool test_bindigits() noexcept
     auto x = x0;
     for(std::size_t i = 0; i < 0x10000; ++i) {
         x = quasi_xorshift(x);
-        auto x_bin = BitArray::bindigits(x,'0','1');
+        auto x_bin = herring::bindigits(x,'0','1');
         std::string str(x_bin.data(), x_bin.size());
         if(bset_t(x).to_string() != str) {
             std::cerr << "Wrong binary representation:" << std::endl;
@@ -51,7 +51,7 @@ bool test_bindigits() noexcept
 template <class T>
 bool test_bitarr_digits() noexcept
 {
-    constexpr BitArray::BitArray<num_bits,T> barr0{123456789ull};
+    constexpr herring::BitArray<num_bits,T> barr0{123456789ull};
     constexpr auto barr0_dig = barr0.digits();
     std::string str(barr0_dig.data(), barr0_dig.size());
     std::bitset<num_bits> bset{123456789ull};
@@ -87,7 +87,7 @@ bool test_from_bitset() noexcept
     std::bitset<num_bits> bset{123456789ull};
 
     for(std::size_t i = 0; i < 0x10000; ++i) {
-        auto barr = BitArray::from::bitset<T>(bset);
+        auto barr = herring::from::bitset<T>(bset);
         for(std::size_t j = 0; j < num_bits; ++j) {
             if (barr.test(j) != bset.test(j)) {
                 std::cerr << "Mismatch:" << std::endl;
@@ -105,10 +105,10 @@ bool test_from_bitset() noexcept
 template <class T>
 bool test_to_bitset() noexcept
 {
-    BitArray::BitArray<num_bits,T> barr{123456789ull};
+    herring::BitArray<num_bits,T> barr{123456789ull};
 
     for(std::size_t i = 0; i < 0x10000; ++i) {
-        auto bset = BitArray::to::bitset(barr);
+        auto bset = herring::to::bitset(barr);
         for(std::size_t j = 0; j < num_bits; ++j) {
             if (barr.test(j) != bset.test(j)) {
                 std::cerr << "Mismatch:" << std::endl;

@@ -28,8 +28,7 @@ In the case BitIterator = \sa{PopIterator}, we get
 #include <iterator>
 #include "../BitArray.hpp"
 
-namespace BitArray {
-
+namespace herring {
 
 /************************//*!
     General Framework

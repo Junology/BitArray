@@ -26,12 +26,12 @@ namespace decomp {
 //! \post mat is lower-triangular up to a permutation of rows.
 template <class T,std::size_t m,std::size_t n>
 constexpr
-std::array<Matrix<BitArray::BitArray<n,T>,n,MatrixMode::ColumnMajor>,2>
-plu(Matrix<BitArray::BitArray<m,T>,n,MatrixMode::ColumnMajor> & mat)
+std::array<Matrix<herring::BitArray<n,T>,n,MatrixMode::ColumnMajor>,2>
+plu(Matrix<herring::BitArray<m,T>,n,MatrixMode::ColumnMajor> & mat)
     noexcept
 {
-    using tmat_t = Matrix<BitArray::BitArray<n,T>,n,MatrixMode::ColumnMajor>;
-    constexpr auto ident = tmat_t::diagonal(BitArray::BitArray<n,T>{}.flip());
+    using tmat_t = Matrix<herring::BitArray<n,T>,n,MatrixMode::ColumnMajor>;
+    constexpr auto ident = tmat_t::diagonal(herring::BitArray<n,T>{}.flip());
     std::array<tmat_t,2> result{ident, ident};
 
     for(std::size_t i = 0; i+1 < n; ++i) {

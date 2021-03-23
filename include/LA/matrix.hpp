@@ -72,7 +72,7 @@ public:
         std::enable_if_t<sizeof...(Tuples)==nvecs,int> = 0
         >
     constexpr Matrix(std::piecewise_construct_t, Tuples&&... tups) noexcept
-        : m_vecs{BitArray::make_from_tuple<Vector>(std::forward<Tuples>(tups))...}
+        : m_vecs{herring::make_from_tuple<Vector>(std::forward<Tuples>(tups))...}
     {}
     //! \}
 

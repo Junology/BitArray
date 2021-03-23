@@ -13,7 +13,7 @@
 
 #include "../BitArray.hpp"
 
-namespace BitArray {
+namespace herring {
 
 //! A set of conversion functions * -> BitArray.
 namespace from {
@@ -44,7 +44,7 @@ bitset(std::bitset<N> const& src) noexcept
         std::make_index_sequence<target_t::nchunks>(), src);
 }
 
-} // end namespace BitArray::from
+} // end namespace herring::from
 
 //! A set of conversion functions BitArray -> *.
 namespace to {
@@ -61,6 +61,6 @@ bitset(BitArray<N,T> const& src) noexcept
 
     return result;
 }
-} // end namespace BitArray::to
+} // end namespace herring::to
 
-} // end namespace BitArray
+} // end namespace herring

@@ -15,7 +15,7 @@
 #include "../BitArray.hpp"
 #include "iterators.hpp"
 
-namespace BitArray {
+namespace herring {
 
 //! Stream output
 template<class C, size_t N, class T>

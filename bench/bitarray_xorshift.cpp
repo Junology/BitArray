@@ -12,7 +12,7 @@
 #define CHUNK_TYPE CHUNK_TYPE_AUX2(NBITS)
 
 bool quasi_xorshift() {
-    static BitArray::BitArray<256,CHUNK_TYPE> x{123456789ull};
+    static herring::BitArray<256,CHUNK_TYPE> x{123456789ull};
     x = x ^ (x << 13);
     x = x ^ (x >> 7);
     x = x ^ (x << 17);

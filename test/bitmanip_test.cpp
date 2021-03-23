@@ -39,12 +39,12 @@ template <std::size_t n, std::size_t p, class T>
 bool test_perms() noexcept
 {
     for(std::size_t m = 1; m <= p; ++m) {
-        auto barr = BitArray::BitArray<n,T>{}.flip().lowpass(m);
+        auto barr = herring::BitArray<n,T>{}.flip().lowpass(m);
         std::size_t c = binom(n,m);
 
         for(std::size_t cnt = 1; cnt < c; ++cnt) {
             auto aux = barr;
-            BitArray::nextperm(aux);
+            herring::nextperm(aux);
             if(aux.count() != m) {
                 std::cerr << __func__ << "@" << __LINE__ << std::endl;
                 std::cerr << barr << std::endl;
@@ -67,17 +67,17 @@ template <std::size_t n, std::size_t p, class T>
 bool test_index() noexcept
 {
     for(std::size_t m = 1; m <= p; ++m) {
-        auto barr = BitArray::BitArray<n,T>{}.flip().lowpass(m);
+        auto barr = herring::BitArray<n,T>{}.flip().lowpass(m);
         std::size_t c = binom(n,m);
 
         for(std::size_t cnt = 0; cnt < c; ++cnt) {
             if(cnt)
-                BitArray::nextperm(barr);
+                herring::nextperm(barr);
 
-            if (BitArray::permindex(barr) != cnt) {
+            if (herring::permindex(barr) != cnt) {
                 std::cerr << __func__ << "@" << __LINE__ << std::endl;
                 std::cerr << barr << std::endl;
-                std::cerr << BitArray::permindex(barr)
+                std::cerr << herring::permindex(barr)
                           << " != " << cnt << std::endl;
                 return false;
             }

@@ -18,7 +18,7 @@
 #include <bitset>
 //*/
 
-namespace BitArray {
+namespace herring {
 
 //! The default type of chunks in BitArray.
 using default_chunk_t = unsigned long long;
@@ -320,10 +320,11 @@ public:
 
     //! Compute the position of the Most Significant Bit.
     //! If there is no bit set, then return the number of all bits in the array.
-    constexpr std::size_t msb() const noexcept {
+    template <class U = std::true_type, std::enable_if_t<std::is_same<U,std::true_type>::value,int> = 0>
+    constexpr std::size_t msb(U = U{}) const noexcept {
         for(std::size_t i = nchunks; i > 0; --i) {
             if(m_arr[i-1])
-                return msb(m_arr[i-1]) + chunkbits*(i-1);
+                return herring::msb(m_arr[i-1]) + chunkbits*(i-1);
         }
         return numbits;
     }

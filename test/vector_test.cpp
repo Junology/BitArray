@@ -75,16 +75,16 @@ int main(int, char**)
     if (!test_traverse<std::bitset<num_bits>>())
         return EXIT_FAILURE;
     std::cout << "BitArray with 8bit chunks" << std::endl;
-    if (!test_traverse<BitArray::BitArray<num_bits,uint8_t>>())
+    if (!test_traverse<herring::BitArray<num_bits,uint8_t>>())
         return EXIT_FAILURE;
     std::cout << "BitArray with 16bit chunks" << std::endl;
-    if (!test_traverse<BitArray::BitArray<num_bits,uint16_t>>())
+    if (!test_traverse<herring::BitArray<num_bits,uint16_t>>())
         return EXIT_FAILURE;
     std::cout << "BitArray with 32bit chunks" << std::endl;
-    if (!test_traverse<BitArray::BitArray<num_bits,uint32_t>>())
+    if (!test_traverse<herring::BitArray<num_bits,uint32_t>>())
         return EXIT_FAILURE;
     std::cout << "BitArray with 64bit chunks" << std::endl;
-    if (!test_traverse<BitArray::BitArray<num_bits,uint64_t>>())
+    if (!test_traverse<herring::BitArray<num_bits,uint64_t>>())
         return EXIT_FAILURE;
     std::cout << "Passed." << std::endl;
 
@@ -93,16 +93,16 @@ int main(int, char**)
     if (!test_range<std::bitset<num_bits>>())
         return EXIT_FAILURE;
     std::cout << "BitArray with 8bit chunks" << std::endl;
-    if (!test_range<BitArray::BitArray<num_bits,uint8_t>>())
+    if (!test_range<herring::BitArray<num_bits,uint8_t>>())
         return EXIT_FAILURE;
     std::cout << "BitArray with 16bit chunks" << std::endl;
-    if (!test_range<BitArray::BitArray<num_bits,uint16_t>>())
+    if (!test_range<herring::BitArray<num_bits,uint16_t>>())
         return EXIT_FAILURE;
     std::cout << "BitArray with 32bit chunks" << std::endl;
-    if (!test_range<BitArray::BitArray<num_bits,uint32_t>>())
+    if (!test_range<herring::BitArray<num_bits,uint32_t>>())
         return EXIT_FAILURE;
     std::cout << "BitArray with 64bit chunks" << std::endl;
-    if (!test_range<BitArray::BitArray<num_bits,uint64_t>>())
+    if (!test_range<herring::BitArray<num_bits,uint64_t>>())
         return EXIT_FAILURE;
     std::cout << "Passed." << std::endl;
 

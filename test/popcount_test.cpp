@@ -25,7 +25,7 @@ T naive_popcnt(T x) noexcept
 template <class T, T max>
 bool test() {
     for(T x = T{0u}; x < max; ++x) {
-        T cnt = BitArray::popcount(x);
+        T cnt = herring::popcount(x);
         T cnt_naive = naive_popcnt(x);
         if(cnt != cnt_naive) {
             std::cerr << "Pop-counts disagree:" << std::endl;

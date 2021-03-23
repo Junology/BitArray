@@ -40,7 +40,7 @@ T naive_trail1(T x) noexcept
 template <class T, T max>
 bool test0() {
     for(T x = T{0u}; x < max; ++x) {
-        T cnt = BitArray::counttrail0(x);
+        T cnt = herring::counttrail0(x);
         T cnt_naive = naive_trail0(x);
         if(cnt != cnt_naive) {
             std::cerr << "Counts of trail0 disagree:" << std::endl;
@@ -55,7 +55,7 @@ bool test0() {
 template <class T, T max>
 bool test1() {
     for(T x = T{0u}; x < max; ++x) {
-        T cnt = BitArray::counttrail1(x);
+        T cnt = herring::counttrail1(x);
         T cnt_naive = naive_trail1(x);
         if(cnt != cnt_naive) {
             std::cerr << "Counts of trail1 disagree:" << std::endl;
@@ -71,9 +71,9 @@ template <class T, T max = std::numeric_limits<T>::max()>
 bool test_msb() noexcept
 {
     for(T x = T{1u}; x < max; ++x) {
-        if((x >> BitArray::msb(x)) != 1u) {
+        if((x >> herring::msb(x)) != 1u) {
             std::cerr << "Wrong MSB:" << std::endl;
-            std::cerr << BitArray::msb(x) << "@"
+            std::cerr << herring::msb(x) << "@"
                       << std::bitset<std::numeric_limits<T>::digits>(x)
                       << std::endl;
             return false;
@@ -86,7 +86,7 @@ int main(int, char**)
 {
     std::cout << "\e[34;1m---\nmake_from_tuple\n---\e[m" << std::endl;
     auto tup0 = std::make_tuple(1,3.14,'c');
-    auto tup = BitArray::make_from_tuple<std::tuple<int,double,char>>(tup0);
+    auto tup = herring::make_from_tuple<std::tuple<int,double,char>>(tup0);
     if(std::get<0>(tup) != std::get<0>(tup0)) {
         std::cerr << "The first component of tup: " << std::get<0>(tup) << std::endl;
         std::cerr << "Should be: " << std::get<0>(tup0) << std::endl;

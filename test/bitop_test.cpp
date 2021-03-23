@@ -17,7 +17,7 @@ T quasi_xorshift(T x) {
 }
 
 template <class T, std::size_t N>
-bool set_vs_arr(std::bitset<N> const& bset, BitArray::BitArray<N,T> const& barr)
+bool set_vs_arr(std::bitset<N> const& bset, herring::BitArray<N,T> const& barr)
 {
     for(std::size_t i = 0; i < N; ++i) {
         if (barr.test(i) != bset.test(i)) {
@@ -35,7 +35,7 @@ template <class T>
 bool test_qxorshift() noexcept
 {
     std::bitset<num_bits> bset{123456789ull};
-    BitArray::BitArray<num_bits,T> barr{123456789ull};
+    herring::BitArray<num_bits,T> barr{123456789ull};
 
     for(std::size_t i = 0; i < num_loop; ++i) {
         if (!set_vs_arr(bset, barr))
@@ -51,7 +51,7 @@ template <class T>
 bool test_or() noexcept
 {
     std::bitset<num_bits> bset1{123456789ull}, bset2{0xABCDEFull};
-    BitArray::BitArray<num_bits,T> barr1{123456789ull}, barr2{0xABCDEFull};
+    herring::BitArray<num_bits,T> barr1{123456789ull}, barr2{0xABCDEFull};
 
     for(std::size_t i = 0; i < num_loop; ++i) {
         if (!set_vs_arr(bset1 | bset2, barr1 | barr2))
@@ -69,7 +69,7 @@ template <class T>
 bool test_and() noexcept
 {
     std::bitset<num_bits> bset1{123456789ull}, bset2{0xABCDEFull};
-    BitArray::BitArray<num_bits,T> barr1{123456789ull}, barr2{0xABCDEFull};
+    herring::BitArray<num_bits,T> barr1{123456789ull}, barr2{0xABCDEFull};
 
     for(std::size_t i = 0; i < num_loop; ++i) {
         if (!set_vs_arr(bset1 & bset2, barr1 & barr2))
@@ -87,7 +87,7 @@ template <class T>
 bool test_not() noexcept
 {
     std::bitset<num_bits> bset{123456789ull};
-    BitArray::BitArray<num_bits,T> barr{123456789ull};
+    herring::BitArray<num_bits,T> barr{123456789ull};
 
     for(std::size_t i = 0; i < num_loop; ++i) {
         if (!set_vs_arr(~bset, ~barr))
@@ -104,7 +104,7 @@ bool test_increment() noexcept
 {
     // max + 1 should be 0.
     {
-        auto x = BitArray::BitArray<num_bits>{}.flip();
+        auto x = herring::BitArray<num_bits>{}.flip();
         ++x;
         if(x) {
             std::cerr << __func__ << "@" << __LINE__ << std::endl;
@@ -114,11 +114,11 @@ bool test_increment() noexcept
     }
 
     constexpr unsigned long addee_num = 10000u;
-    BitArray::BitArray<num_bits> bset{123456789ull};
-    BitArray::BitArray<num_bits> addee{addee_num};
+    herring::BitArray<num_bits> bset{123456789ull};
+    herring::BitArray<num_bits> addee{addee_num};
 
     for(std::size_t i = 0; i < num_loop; ++i) {
-        BitArray::BitArray<num_bits> add_result = bset;
+        herring::BitArray<num_bits> add_result = bset;
 
         // Adder
         std::thread adder(
@@ -146,6 +146,23 @@ bool test_increment() noexcept
         }
     }
 
+    return true;
+}
+
+template <class T>
+bool test_msb() noexcept
+{
+    using barr_t = herring::BitArray<num_bits,T>;
+    barr_t barr{314159265358979ull};
+
+    for(std::size_t cnt = 0; cnt < num_loop; ++cnt) {
+        if((barr >> barr.msb()) != barr_t{1u}) {
+            std::cerr << __func__ << "@" << __LINE__ << std::endl;
+            std::cerr << barr.msb() << "@" << barr << std::endl;
+            return false;
+        }
+        barr = quasi_xorshift(barr);
+    }
     return true;
 }
 
@@ -221,5 +238,18 @@ int main(int, char**)
     if (!test_increment<std::uint64_t>())
         return EXIT_FAILURE;
 
+    std::cout << "\e[34;1m---\nTest Most Significant Bit (MSB).\n---\e[m" << std::endl;
+    std::cout << "8bit chunks:" << std::endl;
+    if (!test_msb<std::uint8_t>())
+        return EXIT_FAILURE;
+    std::cout << "16bit chunks:" << std::endl;
+    if (!test_msb<std::uint16_t>())
+        return EXIT_FAILURE;
+    std::cout << "32bit chunks:" << std::endl;
+    if (!test_msb<std::uint32_t>())
+        return EXIT_FAILURE;
+    std::cout << "64bit chunks:" << std::endl;
+    if (!test_msb<std::uint64_t>())
+        return EXIT_FAILURE;
     return EXIT_SUCCESS;
 }

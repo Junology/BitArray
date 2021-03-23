@@ -113,14 +113,14 @@ struct PopTraversable
         std::size_t i_;
         BA const& bits_;
 
-        constexpr Iterator(BitArray::ContainerBeginTag, BA const &bits) noexcept
+        constexpr Iterator(herring::ContainerBeginTag, BA const &bits) noexcept
             : i_(0), bits_(bits)
         {
             while(i_ < bits.size() && !bits.test(i_))
                 ++i_;
         }
 
-        constexpr Iterator(BitArray::ContainerEndTag, BA const &bits) noexcept
+        constexpr Iterator(herring::ContainerEndTag, BA const &bits) noexcept
             : i_(bits.size()), bits_(bits)
         {}
 
@@ -170,12 +170,12 @@ struct PopTraversable
     public:
         constexpr Iterator begin() noexcept
         {
-            return Iterator(BitArray::ContainerBeginTag{}, bits_);
+            return Iterator(herring::ContainerBeginTag{}, bits_);
         }
 
         constexpr Iterator end() noexcept
         {
-            return Iterator(BitArray::ContainerEndTag{}, bits_);
+            return Iterator(herring::ContainerEndTag{}, bits_);
         }
     };
 
@@ -187,18 +187,18 @@ struct PopTraversable
 
 
 template <class T, std::size_t n>
-struct PopTraversable<BitArray::BitArray<n,T>>
+struct PopTraversable<herring::BitArray<n,T>>
 {
     template <class F>
-    static constexpr void traverse(BitArray::BitArray<n,T> const& bits, F&& f) noexcept {
-        for(auto i : BitArray::range<BitArray::PopIterator>(bits)) {
+    static constexpr void traverse(herring::BitArray<n,T> const& bits, F&& f) noexcept {
+        for(auto i : herring::range<herring::PopIterator>(bits)) {
             f(i);
         }
     }
 
-    static constexpr auto range(BitArray::BitArray<n,T> const& bits) noexcept
+    static constexpr auto range(herring::BitArray<n,T> const& bits) noexcept
     {
-        return BitArray::range<BitArray::PopIterator>(bits);
+        return herring::range<herring::PopIterator>(bits);
     }
 };
 

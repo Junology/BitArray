@@ -13,7 +13,7 @@
 #include <limits>
 #include <array>
 
-namespace BitArray {
+namespace herring {
 
 /*******************************************!
  * \section Compile-time utility functions

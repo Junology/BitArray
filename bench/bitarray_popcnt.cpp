@@ -13,7 +13,7 @@
 
 int main(int, char**)
 {
-    using barr_type = BitArray::BitArray<128,CHUNK_TYPE>;
+    using barr_type = herring::BitArray<128,CHUNK_TYPE>;
     volatile std::size_t i;
 
     std::cout << "Bench mark of count() for " << NBITS << "bit chunks." << std::endl;

@@ -12,7 +12,7 @@ constexpr std::size_t ncols = 59;
 constexpr std::size_t num_loop = 0x100;
 
 template <class T, std::size_t r, std::size_t c>
-void show_colmat(BitLA::Matrix<BitArray::BitArray<r,T>,c,BitLA::MatrixMode::ColumnMajor> const& mat)
+void show_colmat(BitLA::Matrix<herring::BitArray<r,T>,c,BitLA::MatrixMode::ColumnMajor> const& mat)
 {
     for(std::size_t i = 0; i < r; ++i) {
         std::cout << "│";
@@ -52,7 +52,7 @@ random_mat(T seed, std::index_sequence<Is...>) noexcept
 
 template <class T, std::size_t r, std::size_t c>
 constexpr bool is_upper_triangular(
-    BitLA::Matrix<BitArray::BitArray<r,T>,c,BitLA::MatrixMode::ColumnMajor> const& mat
+    BitLA::Matrix<herring::BitArray<r,T>,c,BitLA::MatrixMode::ColumnMajor> const& mat
     ) noexcept
 {
     for(std::size_t i = 1; i < r; ++i) {
@@ -67,9 +67,9 @@ constexpr bool is_upper_triangular(
 template <class T, std::size_t r, std::size_t c>
 constexpr bool test_plu() noexcept
 {
-    using vec_t = BitArray::BitArray<r,T>;
+    using vec_t = herring::BitArray<r,T>;
 
-    constexpr auto ident = BitLA::Matrix<BitArray::BitArray<c,T>,c,BitLA::MatrixMode::ColumnMajor>::diagonal(BitArray::BitArray<c,T>{}.flip());
+    constexpr auto ident = BitLA::Matrix<herring::BitArray<c,T>,c,BitLA::MatrixMode::ColumnMajor>::diagonal(herring::BitArray<c,T>{}.flip());
 
     auto mat = random_mat<BitLA::MatrixMode::ColumnMajor>(
         vec_t{314159265358979ull},
@@ -130,7 +130,7 @@ int main(int, char**)
     {
         constexpr std::size_t dr = 7;
         constexpr std::size_t dc = 9;
-        using vec_t = BitArray::BitArray<dr,uint64_t>;
+        using vec_t = herring::BitArray<dr,uint64_t>;
         constexpr BitLA::Matrix<vec_t,dc,BitLA::MatrixMode::ColumnMajor> mat{
             vec_t{1415926535ull},
             vec_t{8979323846ull},
