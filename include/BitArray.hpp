@@ -233,6 +233,23 @@ public:
         return *this;
     }
 
+    //! Swap the positions of two bits
+    constexpr BitArray<N,chunk_type>& swapBits(std::size_t pos1, std::size_t pos2) noexcept
+    {
+        std::size_t gpos1 = pos1 / chunkbits;
+        std::size_t lpos1 = pos1 % chunkbits;
+        std::size_t gpos2 = pos2 / chunkbits;
+        std::size_t lpos2 = pos2 % chunkbits;
+
+        chunk_type mask = static_cast<chunk_type>(
+            ((m_arr[gpos1] >> lpos1) ^ (m_arr[gpos2] >> lpos2)) & 1u
+            );
+        m_arr[gpos1] ^= mask << lpos1;
+        m_arr[gpos2] ^= mask << lpos2;
+
+        return *this;
+    }
+
     //! Test if a bit in the given position is true.
     constexpr bool test(std::size_t pos) const noexcept
     {
